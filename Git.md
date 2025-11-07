@@ -1,6 +1,6 @@
-# Git
+# 
 
-## 初始化git仓库
+# 初始化git仓库
 
 ```
 # 当前目录作为Git仓库
@@ -10,14 +10,14 @@ git init
 git init yourPath
 ```
 
-## Clone一个Git仓库
+# Clone一个Git仓库
 
 ```
 #url是仓库地址，directory是本地目录
 git clone <url> [directory]
 ```
 
-## 配置
+# 配置
 
 ```
 # 配置用户名
@@ -34,7 +34,7 @@ git config --local --unset remote.origin.url
 git config --list
 ```
 
-## 添加文件到缓存
+# 添加文件到缓存
 
 ```
 # 添加单个文件
@@ -56,7 +56,7 @@ git status -s
 git diff
 ```
 
-将缓冲区内容添加到仓库
+# 将缓冲区内容添加到仓库
 
 ```
 git commit -m "第一次版本提交"
@@ -65,7 +65,7 @@ git commit -m "第一次版本提交"
 git commit -am "第一次版本提交"
 ```
 
-删除操作
+# 删除操作
 
 ```
 # 同时完成工作区删除和暂存区记录
@@ -75,7 +75,7 @@ git rm filename.txt
 git rm --cached filename.txt
 ```
 
-Git的分支管理
+# Git的分支管理
 
 ```
 # 查看当前分支
