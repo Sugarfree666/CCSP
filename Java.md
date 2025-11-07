@@ -1,3 +1,33 @@
+# Tips
+
+1. 不需要再手动get和set方法，只需要定义好变量后加@Data注解
+
+```java
+@Data //用于自动生成getter、setter、toString、无参构造器等方法
+@AllArgsConstructor //用于自动生成包含所有字段的构造方法
+@NoArgsConstructor//无参构造器（@Dtaa中已包含）
+public class Card {
+    private int carID;
+    private String name;
+    private int phone;
+    private int money;
+}
+```
+
+# Java框架
+
+![image.png](./assets/1758023871746-6c7afbd8-4095-40f0-9078-e62c2e450ec9.webp)
+
+# static
+
+​	如果这个方法只是做一个功能且不需要直接访问对象的数据，这个方法直接定义成静态方法。如果这个方法是对对象的行为，需要访问对象数据，必须定义为实例方法
+
+![image.png](./assets/1760181072293-b7687ca7-471b-4365-9d27-e2372c2b882b.webp)
+
+# 权限修饰符
+
+![image.png](./assets/1760351842260-4637cddc-0949-4542-a1e2-3e4e518bc176.webp)
+
 # 多态
 
 ## 认识多态
