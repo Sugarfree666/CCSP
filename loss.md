@@ -30,7 +30,7 @@ RoG 的损失函数旨在解决以下关键问题：
 ## Loss 整体结构
 
 $$
-\mathcal{L} = \underbrace{\log P_{\theta}(a \mid q, Z_{K}^*, G)}_{\text{检索推理优化}} + \underbrace{\frac{1}{|Z^*|} \sum_{z \in Z^*} \log P_{\theta}(z \mid q)}_{\text{规划优化}}
+\mathcal{L} = -\underbrace{\log P_{\theta}(a \mid q, Z_{K}^*, G)}_{\text{检索推理优化}} - \underbrace{\frac{1}{|Z^*|} \sum_{z \in Z^*} \log P_{\theta}(z \mid q)}_{\text{规划优化}}
 $$
 
 **解释：**ROG损失函数的推导始于一个概率模型设定，然后通过引入变分推断来优化其证据下界（ELBO），最终分解为两个可以实际优化的损失项：**规划损失**和**推理损失**。
@@ -62,4 +62,4 @@ $$
 
    2. 推理损失:$\mathcal{L}_{reason} = \mathbb{E}_{z\sim Q(z|a,q,\mathcal{G})}[log~P_{\theta}(a|q,z,\mathcal{G})] \simeq log~P_{\theta}(a|q,\mathcal{Z}_{K}^{*},\mathcal{G})$
 
-4. 
+4. 优化目标：$$\mathcal{L} = \log P_{\theta}(a|q, \mathcal{Z}_{K}^{*}, \mathcal{G}) + \frac{1}{|\mathcal{Z}^{*}|} \sum_{z \in \mathcal{Z}^{*}} \log P_{\theta}(z|q)$$
