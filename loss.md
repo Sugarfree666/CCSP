@@ -1,3 +1,57 @@
+# 常见的损失函数
+
+## 基于距离的损失函数
+
+**均方误差损失函数（MSE)**，$$y_i$$是真实值，$$\hat{y_i}$$是预测值，n是样本数量。对误差很敏感。
+$$
+L_{\text{MSE}} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+$$
+**平均绝对误差（MAE）**，计算预测值与真实值之差的绝对值的平均值。它对异常值不敏感，因为绝对值的增长是线性的，不会放大大误差，对异常值鲁棒性强。
+$$
+L_{MAE} = \frac{1}{N} \sum_{i=1}^{N} |y_i - \hat{y}_i|
+$$
+**Huber Loss**，Huber Loss 是 MSE 和 MAE 的混合体。它引入了一个超参数 $\delta$  来定义一个阈值：
+
+1. 当预测误差的绝对值**小于或等于** $\delta$ 时，损失采用 **MSE** 的形式（平方损失）。
+2. 当预测误差的绝对值**大于** $\delta$ 时，损失采用 **MAE** 的形式（线性损失）。
+
+$$
+L_\delta(y_i, \hat{y}_i) = \begin{cases} \frac{1}{2}(y_i - \hat{y}_i)^2 & \text{if } |y_i - \hat{y}_i| \le \delta \\ \delta(|y_i - \hat{y}_i| - \frac{1}{2}\delta) & \text{if } |y_i - \hat{y}_i| > \delta \end{cases}
+$$
+
+## 基于概率分布损失函数
+
+**交叉熵损失**
+
+二分类，其中$$y_i$$是真实标签（0或者1），$$\hat{p_i}$$是预测概率。如果真实标签是正类 (1)，损失会根据 $\log(p)$ 计算。模型越是自信地预测为正类（$p$ 接近 1），损失越低。如果真实标签是负类 (0)，损失会根据 $\log(1-p)$ 计算。模型越是自信地预测为负类（$p$ 接近 0），损失越低。
+$$
+L = - \frac{1}{N} \sum_{i=1}^{N} [y_i \log(\hat{p}_i) + (1 - y_i) \log(1 - \hat{p}_i)]
+$$
+多分类，真实标签使用One-Hot编码，$M$ 为类别总数，$y_{i,c}$ 为 One-Hot 编码下的真实标签（若样本 $i$ 属于类别 $c$ 则为 $1$，否则为 $0$），$\hat{p}_{i,c}$ 为预测样本 $i$ 属于类别 $c$ 的概率。
+$$
+L_{CCE} = - \frac{1}{N} \sum_{i=1}^{N} \sum_{c=1}^{M} y_{i,c} \log(\hat{p}_{i,c})
+$$
+**Hinge Loss**，其中，$y_i$是真实标签（+1 或 -1），$s_i$是预测值（未经过 softmax）。Hinge Loss 主要用于支持向量机（SVM），目标是最大化分类间隔。它惩罚那些预测值在正确分类一侧但距离决策边界太近的样本（即间隔内的样本）。
+$$
+L_{Hinge} = \max(0, 1 - y_i s_i)
+$$
+**KL散度**，用来衡量两个概率分布$P$与$Q$之间的差异。
+$$
+D_{KL}(P || Q) = \sum_{x} P(x) \log\left(\frac{P(x)}{Q(x)}\right)
+$$
+
+## 对比学习损失函数
+
+**Contrastive loss**，$D_{a,b}$ 为嵌入空间中两个样本 $x_a$ 和 $x_b$ 之间的距离（通常是欧几里得距离），$Y$ 为相似标签（$Y=0$ 表示相似，$Y=1$ 表示不相似），$m$ 为最小间隔。
+$$
+L_{Contrastive} = \frac{1}{2N} \sum_{i=1}^{N} \left( (1-Y) D_{a,b}^2 + Y \max(0, m - D_{a,b})^2 \right)
+$$
+**Triplet loss**，$D(A, P)$ 为 **Anchor** (A) 和 **Positive** (P) 的距离，$D(A, N)$ 为 **Anchor** (A) 和 **Negative** (N) 的距离。要求锚点与正样本距离锚点与负样本至少一个margin。
+$$
+L=max(0,d(A,P)−d(A,N)+margin)
+$$
+
+
 # 论文标题：Can Knowledge-Graph-based Retrieval Augmented Generation Really Retrieve What You Need?
 
 ## Loss 设计目标
@@ -82,4 +136,11 @@ $$
 
 负样本：加入路径 p 后，LLM 的输出仍然错误；
 
-# 论文标题：
+# 论文标题：DeepRAG: Thinking to Retrieve Step by Step for Large Language Models
+
+## Loss设计目标
+
+1. 通过模仿学习，让模型学会正确的“分解-->检索-->回答”模式。
+2. 使模型能够动态决定何时检索外部知识、何时依赖内部参数知识。
+
+## Loss整体结构
