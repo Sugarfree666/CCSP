@@ -62,4 +62,24 @@ $$
 
    2. 推理损失:$\mathcal{L}_{reason} = \mathbb{E}_{z\sim Q(z|a,q,\mathcal{G})}[log~P_{\theta}(a|q,z,\mathcal{G})] \simeq log~P_{\theta}(a|q,\mathcal{Z}_{K}^{*},\mathcal{G})$
 
-4. 优化目标：$$\mathcal{L} = \log P_{\theta}(a|q, \mathcal{Z}_{K}^{*}, \mathcal{G}) + \frac{1}{|\mathcal{Z}^{*}|} \sum_{z \in \mathcal{Z}^{*}} \log P_{\theta}(z|q)$$
+4. 优化目标：$\mathcal{L} = \log P_{\theta}(a|q, \mathcal{Z}_{K}^{*}, \mathcal{G}) + \frac{1}{|\mathcal{Z}^{*}|} \sum_{z \in \mathcal{Z}^{*}} \log P_{\theta}(z|q)$
+
+# 论文标题：Knowledge Graph-Enhanced Large Language Models via Path Selection
+
+## Loss设计目标
+
+训练一个编码器$$M$$，使其能够衡量问题 q 与路径 p 之间的语义相关性； 识别出那些能帮助 LLM 生成正确答案的路径，即使这些路径与问题在表面上语义不直接相关，也能被正确识别。
+
+## Loss整体结构
+
+该损失函数是基于余弦相似度的成对排序损失
+$$
+\mathcal{L}=\sum_{q}max(cos(h_{q},h_{q}^{-})-cos(h_{q},h_{q}^{+})+\eta,0)
+$$
+其中，$$h_q=M(q)$$:输入问题q的编码向量；$h_{q}^{+}=M(p_{q}^{+})$:正样本知识路径$$p_{q}^{+}$$编码向量；$h_{q}^{-}=M(p_{q}^{-})$:负样本知识路径$$p_{q}^{-}$$编码向量；
+
+正样本：当某个路径 p 加入 prompt 后，LLM 从错误输出变为正确输出；
+
+负样本：加入路径 p 后，LLM 的输出仍然错误；
+
+# 论文标题：
