@@ -46,7 +46,7 @@ $$
 $$
 L_{Contrastive} = \frac{1}{2N} \sum_{i=1}^{N} \left( (1-Y) D_{a,b}^2 + Y \max(0, m - D_{a,b})^2 \right)
 $$
-**Triplet loss**，$D(A, P)$ 为 **Anchor** (A) 和 **Positive** (P) 的距离，$D(A, N)$ 为 **Anchor** (A) 和 **Negative** (N) 的距离。要求锚点与正样本距离锚点与负样本至少一个margin。
+**Triplet loss**，$d(A, P)$ 为 **Anchor** (A) 和 **Positive** (P) 的距离，$d(A, N)$ 为 **Anchor** (A) 和 **Negative** (N) 的距离。要求锚点与正样本距离锚点与负样本至少一个margin。
 $$
 L=max(0,d(A,P)−d(A,N)+margin)
 $$
