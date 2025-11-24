@@ -19,11 +19,9 @@
 
 
 
-
-
-## **检索时用普通图转化成超图来增强LLM？**
-
-
+> 论文：Knowledge Graph-extended Retrieval Augmented Generation for Question Answering
+>
+> KG的引入可能提高多跳但降低简单检索的性能？
 
 
 
@@ -35,8 +33,6 @@
 
 ​	这类问题常常不存在知识库中，因此传统RAG只能检索到相关信息，无法模拟具体推演过程。能不能让RAG不只是取相关资料，还要动态模拟一个被扰动的知识库。
 
-相关论文：
-
 
 
 ## 解决知识冲突
@@ -47,10 +43,37 @@
 
 普通 RAG 会混淆或随机选一个。不是给出一个数字，而是生成一段解释：“关于A公司营收存在争议，财报口径为100亿，但如果扣除XX业务，新闻报道认为是80亿。”
 
-
+论文：
 
 ## 否定性问题判定
 
 知识库中没有提到的东西，LLM非常容易产生幻觉去填补空白。
 
 > 解决的目标问题是：区分“由于缺失数据导致的不知道”和“逻辑上推导出的不存在”
+
+论文：
+
+1. **Towards Trustworthy Knowledge Graph Reasoning: AnUncertainty Aware Perspective**
+
+
+
+
+
+## 复杂约束的问题（Complex Constraint Satisfaction）
+
+
+
+> 我想找一种高血压药物，要求：1. 不含‘磺胺’成分（因为我过敏）；2. 不会与我正在服用的‘阿司匹林’产生拮抗作用；3. 属于医保乙类。请推荐并解释。”
+>
+> 
+
+论文：
+
+1. KG-Agent: An Efficient Autonomous Agent Framework for Complex Reasoning over Knowledge Graph
+2. **Graph-constrained Reasoning: Faithful Reasoning on Knowledge Graphs with Large Language Models**
+3. Generating SPARQL from Natural Language Using Chain-of-Thoughts Prompting
+
+
+
+
+
