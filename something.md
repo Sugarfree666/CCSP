@@ -11,9 +11,7 @@
 # 这种方式，数据集会保存到"/本地路径"中
 huggingface-cli download 数据集名称 --repo-type dataset --token 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   --local-dir 本地路径
 
-
-
-.\hf download drt/kqa_pro --repo-type dataset --token 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 --local-dir "D:\develop_python\PythonProject\kqa_pro_dataset"
+huggingface_hub download rmanluo/RoG-webqsp --repo-type dataset --token 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 --local-dir D:\PyCode\study_project\study_pytorch\study_demo1\webqsp_dataset
 
 
 
@@ -92,7 +90,7 @@ huggingface-cli download 数据集名称 --repo-type dataset --token hf_IJFPFcIX
 
 
 
-在KG增强LLM领域，通过提出不同的检索方法来增强RAG性能已经很难超越SOTA方法的性能。所以我想能不能在处理的问题上做文章，比如说现有研究都是为了解决多跳问题，多实体问题，其实还有一种问题是复杂约束的问题，比如：给几个类似于：我想找一种高血压药物，要求：1. 不含‘磺胺’成分（因为我过敏）；2. 不会与我正在服用的‘阿司匹林’产生拮抗作用；3. 属于医保乙类。如果可以在这种问题上做文章，提高对这种问题的RAG性能也是一个不错的想法。对于这种多约束问题，一般都有哪些约束？
+在KG增强LLM领域，通过提出不同的检索方法来增强RAG性能已经很难超越SOTA方法的性能。所以我想能不能在处理的问题上做文章，比如说现有研究都是为了解决多跳问题，多实体问题，其实还有一种问题是复杂约束的问题，如果可以在这种问题上做文章，提高对这种问题的RAG性能也是一个不错的想法。现在我的想法是利用GoT的思想，把思维建模为图结构来解决复杂约束问题。我发你的文件中是一些初步思路，现在需要细化步骤，也就是具体每一步应该怎么做。
 
 
 
