@@ -70,13 +70,13 @@ T：思维变换：聚合思维，精炼思维，生成思维。
 
 
 
+魔塔社区api：[概览 · 魔搭社区](https://modelscope.cn/my/overview)
+
+硅基流动：[SiliconCloud](https://cloud.siliconflow.cn/me/account/ak)
 
 
 
 
 
-
-
-
-
+[【抽奖】抽一个月的节点 - 福利羊毛 - LINUX DO](https://linux.do/t/topic/1287921/35)
 
