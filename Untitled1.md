@@ -58,7 +58,8 @@ T：思维变换：聚合思维，精炼思维，生成思维。
 
 # 数据集构造
 
-原始问题 (1-to-N) $\rightarrow$ 获取答案集属性 $\rightarrow$ 构造过滤条件 $\rightarrow$ 生成新问题 $\rightarrow$ 验证
+> 原始问题 (1-to-N) $\rightarrow$ 获取答案集属性 $\rightarrow$ 构造过滤条件 $\rightarrow$ 生成新问题 $\rightarrow$ 验证
+>
 
 原始种子数据集：WikiWebQuestions 
 
@@ -74,12 +75,6 @@ T：思维变换：聚合思维，精炼思维，生成思维。
 
 
 
-
-魔塔社区api：[概览 · 魔搭社区](https://modelscope.cn/my/overview)
-
-硅基流动：[SiliconCloud](https://cloud.siliconflow.cn/me/account/ak)
-
-[【抽奖】抽一个月的节点 - 福利羊毛 - LINUX DO](https://linux.do/t/topic/1287921/35)
 
 
 
@@ -132,93 +127,12 @@ Examples:
 
 
 
+> 魔塔社区api：[概览 · 魔搭社区](https://modelscope.cn/my/overview)
+>
+> 硅基流动：[SiliconCloud](https://cloud.siliconflow.cn/me/account/ak)
+>
+> [【抽奖】抽一个月的节点 - 福利羊毛 - LINUX DO](https://linux.do/t/topic/1287921/35)
+
 ```
-[{
-  "original_question": "what did shawnee smith play in?",
-  "source_id": "WebQTrn-115",
-  "original_answer_count": 32,
-  "constraint_description": "is a is 'film' AND released in after 1995 AND duration is less than 109.50 min AND genre is 'horror film' AND directed by is 'Kevin Greutert' AND starring is 'Chester Bennington'",
-  "constraint_logic": "(P31 is 'film') AND (P577 > 1995.0) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P57 is 'Kevin Greutert') AND (P161 is 'Chester Bennington')",
-  "new_ground_truth": [
-    "Q676284"
-  ],
-  "new_answer_count": 1
-},
-  {
-    "original_question": "what movie did angelina jolie direct?",
-    "source_id": "WebQTrn-124",
-    "original_answer_count": 6,
-    "constraint_description": "released in before 2019 AND duration is more than 85.75 min AND genre is 'drama film' AND budget is less than $65.0M",
-    "constraint_logic": "(P577 < 2019.0) AND (P2047 > 85.75) AND (P136 is 'drama film') AND (P2130 is '65000000')",
-    "new_ground_truth": [
-      "Q15146380"
-    ],
-    "new_answer_count": 1
-  },
-  {
-    "original_question": "who was elected president of the philippines?",
-    "source_id": "WebQTrn-157",
-    "original_answer_count": 45,
-    "constraint_description": "is a is 'human' AND gender is 'male' AND born in before 1907 AND died in before 1980 AND occupation is 'politician' AND educated at is 'Harvard Law School'",
-    "constraint_logic": "(P31 is 'human') AND (P21 is 'male') AND (P569 < 1907.75) AND (P570 < 1980.0) AND (P106 is 'politician') AND (P69 is 'Harvard Law School')",
-    "new_ground_truth": [
-      "Q656969"
-    ],
-    "new_answer_count": 1
-  },
-    {
-    "original_question": "what time zones are there in the us?",
-    "source_id": "WebQTrn-193",
-    "original_answer_count": 16,
-    "constraint_description": "country is 'United States' AND is a is 'time zone'",
-    "constraint_logic": "(P17 is 'United States') AND (P31 is 'time zone')",
-    "new_ground_truth": [
-      "Q3446496"
-    ],
-    "new_answer_count": 1
-  },
-    {
-    "original_question": "what are the 5 biggest cities in the usa?",
-    "source_id": "WebQTrn-194",
-    "original_answer_count": 5,
-    "constraint_description": "founded in after 1672 AND elevation is less than 130 m AND population is more than 149.7K AND continent is 'North America'",
-    "constraint_logic": "(P571 > 1672.5) AND (P2044 < 130.0) AND (P1082 > 149749.5) AND (P30 is 'North America')",
-    "new_ground_truth": [
-      "Q65"
-    ],
-    "new_answer_count": 1
-  },
-  {
-    "original_question": "what countries did queen victoria rule?",
-    "source_id": "WebQTrn-197",
-    "original_answer_count": 5,
-    "constraint_description": "founded in before 1924 AND continent is 'Europe' AND population is more than 11.0M",
-    "constraint_logic": "(P571 < 1924.5) AND (P30 is 'Europe') AND (P1082 > 11023911.5)",
-    "new_ground_truth": [
-      "Q174193"
-    ],
-    "new_answer_count": 1
-  },  {
-    "original_question": "who won golden boot?",
-    "source_id": "WebQTrn-206",
-    "original_answer_count": 5,
-    "constraint_description": "league is 'Premier League' AND height is less than 1.86 m AND born in before 1987 AND citizenship is 'United Kingdom'",
-    "constraint_logic": "(P118 is 'Premier League') AND (P2048 < 1.865) AND (P569 < 1987.0) AND (P27 is 'United Kingdom')",
-    "new_ground_truth": [
-      "Q234576"
-    ],
-    "new_answer_count": 1
-  },
-   {
-    "original_question": "where is the thames river located?",
-    "source_id": "WebQTrn-208",
-    "original_answer_count": 9,
-    "constraint_description": "is a is 'ceremonial county of England' AND population is more than 707.2K AND area is less than 1.7K sq km",
-    "constraint_logic": "(P31 is 'ceremonial county of England') AND (P1082 > 707237.5) AND (P2046 is '1662.5177')",
-    "new_ground_truth": [
-      "Q23276"
-    ],
-    "new_answer_count": 1
-  }
-]
+sk-wZPm2CCFydnh7Nuh9vuaMBLYiJxBxP0MsIMwp6rGZ87JVzkF
 ```
