@@ -56,33 +56,97 @@ T：思维变换：聚合思维，精炼思维，生成思维。
 
 
 
-# 数据集构造
+## 数据集构造
 
-> 原始问题 (1-to-N) $\rightarrow$ 获取答案集属性 $\rightarrow$ 构造过滤条件 $\rightarrow$ 生成新问题 $\rightarrow$ 验证
+> 原始问题 (1-to-N) $\rightarrow$ 获取答案实体属性 $\rightarrow$ 构造过滤条件 $\rightarrow$ 生成新问题 $\rightarrow$ 验证
 >
 
-原始种子数据集：WikiWebQuestions 
+原始种子数据集：WikiWebQuestions ，下载地址：(https://github.com/stanford-oval/wikidata-emnlp23)
 
-- 先在 WikiWebQuestions 数据集中找到答案大于等于5的QA。
-- 然后查询答案实体的属性，为构造过滤条件作准备。
+格式如下：
+
+```json
+[  {
+    "id": "WebQTrn-0",
+    "utterance": "what is the name of justin bieber brother?",
+    "sparql": "PREFIX wd: <http://www.wikidata.org/entity/> PREFIX wdt: <http://www.wikidata.org/prop/direct/> SELECT DISTINCT ?x WHERE { wd:Q34086 wdt:P3373 ?x. ?x wdt:P21 wd:Q6581097. }"
+  }
+]
+```
+
+- 下载 WikiWebQuestions 数据集后，在其中的 train 数据集找到答案大于等于 5 的QA。
+
+```json
+  {
+    "original_id": "WebQTrn-60",
+    "question": "what countries do people speak portuguese?",
+    "original_sparql": "PREFIX wd: <http://www.wikidata.org/entity/> PREFIX wdt: <http://www.wikidata.org/prop/direct/> SELECT DISTINCT ?x WHERE { ?x wdt:P37 wd:Q5146; wdt:P31/wdt:P279* wd:Q6256. }",
+    "answers": [
+      "Q574",
+      "Q45",
+      "Q155",
+      "Q916",
+      "Q983",
+      "Q1007",
+      "Q1011",
+      "Q1029",
+      "Q1039",
+      "Q19356759",
+      "Q27304761"
+    ],
+    "answer_count": 11
+  }
+```
+
+- 然后查询答案实体的属性，提取每条数据里的answer列表，批量向Wikidata查询这些实体的属性，存到answer字段后面。
+  - 定义一些高质量属性，也就是程序去Wikidata中要查的属性。
+  - 加载 seed_1_to_n_questions.json，循环处理每一个问题。
+  - 拿到该问题的所有 QID，对每一个QID 扔进查询函数进行查询。
+  - 把查询得到的属性保存到"answers_attributes"字段。
+  - 最后保存为data_with_attributes.json文件。
+
+```json
+"answers_attributes": {
+      "Q4880234": {
+        "P31": [
+          "written work"
+        ],
+        "P136": [
+          "children's novel"
+        ],
+        "P407": [
+          "English"
+        ]
+    }
+}
+```
+
+
+- 接下来就是利用data_with_attributes.json构造过滤条件。**逆向工程**，在答案列表中确定一个答案，然后尝试通过添加约束条件，将答案限制在**一个**。
+
+```json
+[  {
+    "original_question": "what books did beverly cleary right?",
+    "source_id": "WebQTrn-18",
+    "original_answer_count": 28,
+    "constraint_description": "is a is 'literary work' AND released in after 1956 AND award received is 'Newbery Medal'",
+    "constraint_logic": "(P31 is 'literary work') AND (P577 > 1956.75) AND (P166 is 'Newbery Medal')",
+    "new_ground_truth": [
+      "Q5246906"
+    ],
+    "new_answer_count": 1
+  }]
+```
+
+
+- 构造prompt，让LLM根据生成的约束根据原问题进行重写。
+- 验证。
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-# prompt
+## prompt
 
 You are a search-query optimization expert. Your task: take an **Original Question** plus a set of **Constraints** and rewrite them as a single, natural, fluent English complex question that a real person might ask.
 
@@ -123,16 +187,70 @@ Examples:
 
 
 
-
-
-
-
 > 魔塔社区api：[概览 · 魔搭社区](https://modelscope.cn/my/overview)
 >
 > 硅基流动：[SiliconCloud](https://cloud.siliconflow.cn/me/account/ak)
 >
-> [【抽奖】抽一个月的节点 - 福利羊毛 - LINUX DO](https://linux.do/t/topic/1287921/35)
+> (https://github.com/chatanywhere/GPT_API_free)
 
-```
+```python
+# free-gpt-key
 sk-wZPm2CCFydnh7Nuh9vuaMBLYiJxBxP0MsIMwp6rGZ87JVzkF
 ```
+
+
+
+```python
+INTERESTING_PROPS = [
+    # --- 基础分类 ---
+    "P31",    # Instance of (是...的实例: 人, 电影, 城市)
+    "P279",   # Subclass of (是...的子类: 属于生物, 属于交通工具)
+
+    # --- 人物相关 (People) ---
+    "P569",   # Date of birth (出生日期) -> 适合: 年代约束 (e.g., born after 1990)
+    "P570",   # Date of death (死亡日期)
+    "P27",    # Country of citizenship (国籍) -> 适合: 地点约束
+    "P106",   # Occupation (职业) -> 适合: 角色过滤 (e.g., acts as Director)
+    "P166",   # Award received (获得奖项) -> 适合: 高级约束 (e.g., won Nobel Prize)
+    "P69",    # Educated at (毕业院校) -> 适合: 校友约束
+    "P21",    # Sex or gender (性别) -> 适合: 人口统计学约束 (慎用，但在数据集中常见)
+
+    # --- 创意作品 (Creative Works: 电影, 书籍, 音乐) ---
+    "P577",   # Publication date (发布/上映时间) -> 适合: 时间约束
+    "P136",   # Genre (流派) -> 适合: 类型约束 (e.g., Horror movies)
+    "P57",    # Director (导演) -> 适合: 关系约束
+    "P161",   # Cast member (演员阵容) -> 适合: 合作关系约束
+    "P175",   # Performer (表演者/歌手)
+    "P2047",  # Duration (时长) -> 适合: 数值约束 (e.g., > 120 minutes)
+    "P2142",  # Box office (票房) -> 适合: 商业数值约束 (e.g., > 1 Billion USD)
+    "P2130",  # Cost/Budget (成本/预算)
+    "P407",   # Language of work (语言)
+
+    # --- 地理与行政 (Geography & Places) ---
+    "P17",    # Country (所属国家)
+    "P1082",  # Population (人口) -> 适合: 规模约束 (e.g., > 5 million people)
+    "P2046",  # Area (面积) -> 适合: 大小约束
+    "P2044",  # Elevation above sea level (海拔) -> 适合: 地形约束
+    "P30",    # Continent (所属洲)
+    "P1376",  # Capital of (是...的首都) -> 适合: 政治地位约束
+
+    # --- 组织与体育 (Organizations & Sports) ---
+    "P571",   # Inception (成立时间)
+    "P159",   # Headquarters location (总部所在地)
+    "P1128",  # Employees (员工数量) -> 适合: 企业规模约束
+    "P118",   # League (所属联盟: NBA, 英超等)
+    "P112",   # Founder (创始人)
+
+    # --- 科学与物理 (Science & Objects) ---
+    "P2048",  # Height (高度 - 建筑/人)
+    "P2067",  # Mass (质量/重量)
+    "P186",   # Material used (由...材料制成)
+    "P61",    # Discoverer or inventor (发现者/发明者)
+]
+```
+
+
+
+
+
+what movies did miley cyrus play in?
