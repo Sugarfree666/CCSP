@@ -196,6 +196,10 @@ Examples:
 ```python
 # free-gpt-key
 sk-wZPm2CCFydnh7Nuh9vuaMBLYiJxBxP0MsIMwp6rGZ87JVzkF
+https://api.chatanywhere.tech
+# 硅基流动
+sk-iedkedhtzkamboikwwoamudadmxmuwvrxwovbedjzvcycqda
+https://api.siliconflow.cn/v1/
 ```
 
 
