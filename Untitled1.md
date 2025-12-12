@@ -61,7 +61,7 @@ T：思维变换：聚合思维，精炼思维，生成思维。
 > 原始问题 (1-to-N) $\rightarrow$ 获取答案实体属性 $\rightarrow$ 构造过滤条件 $\rightarrow$ 生成新问题 $\rightarrow$ 验证
 >
 
-原始种子数据集：WikiWebQuestions ，下载地址：(https://github.com/stanford-oval/wikidata-emnlp23)
+原始种子数据集：WikiWebQuestions，下载地址：(https://github.com/stanford-oval/wikidata-emnlp23)
 
 格式如下：
 
@@ -141,6 +141,8 @@ T：思维变换：聚合思维，精炼思维，生成思维。
 
 - 构造prompt，让LLM根据生成的约束根据原问题进行重写。
 - 验证。
+
+
 
 
 
@@ -257,4 +259,3 @@ INTERESTING_PROPS = [
 
 
 
-what movies did miley cyrus play in?
