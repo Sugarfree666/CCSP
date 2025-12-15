@@ -6,8 +6,8 @@ import random
 from urllib.error import HTTPError
 
 # 配置
-INPUT_FILE = 'datasets/seed_1_to_n_questions.json'  # 上一步的输出文件
-OUTPUT_FILE = 'datasets/data_with_attributes.json'
+INPUT_FILE = '../datasets/seed_1_to_n_questions.json'  # 上一步的输出文件
+OUTPUT_FILE = '../datasets/data_with_attributes.json'
 WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
 
 

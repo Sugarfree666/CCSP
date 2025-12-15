@@ -7,8 +7,8 @@ from collections import Counter
 # ==========================================
 # 1. 配置区域
 # ==========================================
-INPUT_FILE = 'datasets/datasets.json'
-OUTPUT_FILE = 'datasets/complex_constraint_dataset.json'
+INPUT_FILE = '../datasets/datasets.json'
+OUTPUT_FILE = '../datasets/complex_constraint_dataset.json'
 
 TARGET_ANSWER_COUNT = 1  # 目标：唯一答案
 MIN_CONSTRAINTS = 2  # 允许 2 个约束

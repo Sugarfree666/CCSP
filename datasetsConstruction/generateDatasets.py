@@ -105,8 +105,8 @@ Output:
 
 
 # 1. 读取原始数据
-input_file = 'datasets/complex_constraint_dataset.json'
-output_file = 'datasets/complex_constraint_dataset_rewrite_queries.json'
+input_file = '../datasets/complex_constraint_dataset.json'
+output_file = '../datasets/complex_constraint_dataset_rewrite_queries.json'
 
 with open(input_file, 'r', encoding='utf-8') as f:
     dataset = json.load(f)

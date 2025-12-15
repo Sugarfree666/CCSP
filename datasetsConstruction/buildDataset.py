@@ -5,7 +5,7 @@ from urllib.error import HTTPError
 
 # 1. 配置参数
 INPUT_FILE = r'C:\Users\sugarfree\Downloads\wikidata-emnlp23-master\train.json'  # 你上传的文件名
-OUTPUT_FILE = 'datasets\seed_1_to_n_questions.json'
+OUTPUT_FILE = '../datasets/seed_1_to_n_questions.json'
 WIKIDATA_ENDPOINT = "https://query.wikidata.org/sparql"
 MIN_ANSWERS = 3  # 只有答案数量 >= 3 的问题才会被保留作为“复杂约束”的种子
 MAX_ANSWERS = 100  # 排除答案太多的问题（比如“所有人类”），避免噪音

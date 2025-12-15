@@ -1,7 +1,7 @@
 import json
 
 # 读取原始文件
-with open('datasets/data_with_attributes.json', 'r', encoding='utf-8') as f:
+with open('../datasets/data_with_attributes.json', 'r', encoding='utf-8') as f:
     data = json.load(f)  # data 是一个列表
 
 # 取前n个元素
@@ -9,7 +9,7 @@ n = 20  # 例如：取前3个元素
 first_n_elements = data[:n]
 
 # 保存到新文件
-with open('datasets/datasets.json', 'w', encoding='utf-8') as f:
+with open('../datasets/datasets.json', 'w', encoding='utf-8') as f:
     json.dump(first_n_elements, f, indent=2, ensure_ascii=False)
 
 print(f"已保存前 {len(first_n_elements)} 个元素到 datasets.json")
