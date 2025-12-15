@@ -1,0 +1,1178 @@
+[
+  {
+    "original_question": "what books did beverly cleary write?",
+    "source_id": "WebQTrn-18",
+    "original_answer_count": 28,
+    "constraint_description": "genre is 'children's fiction' AND is a is 'novel series'",
+    "constraint_logic": "(P136 is 'children's fiction') AND (P31 is 'novel series')",
+    "new_ground_truth": [
+      "Q7289900"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which book in the novel series genre by Beverly Cleary is classified as children's fiction?"
+  },
+  {
+    "original_question": "what books did beverly cleary write?",
+    "source_id": "WebQTrn-18",
+    "original_answer_count": 28,
+    "constraint_description": "released date before 1981 AND is a is 'written work'",
+    "constraint_logic": "(P577 < 1981.25) AND (P31 is 'written work')",
+    "new_ground_truth": [
+      "Q4880234"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which written work by Beverly Cleary was released before 1981?"
+  },
+  {
+    "original_question": "what books did beverly cleary write?",
+    "source_id": "WebQTrn-18",
+    "original_answer_count": 28,
+    "constraint_description": "is a is 'literary work' AND released date after 1956 AND award received is 'Newbery Medal'",
+    "constraint_logic": "(P31 is 'literary work') AND (P577 > 1956.75) AND (P166 is 'Newbery Medal')",
+    "new_ground_truth": [
+      "Q5246906"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which book by Beverly Cleary that is a literary work, was released after 1956 and received the Newbery Medal?"
+  },
+  {
+    "original_question": "what books did beverly cleary write?",
+    "source_id": "WebQTrn-18",
+    "original_answer_count": 28,
+    "constraint_description": "is a is 'literary work' AND released date after 1956 AND genre is 'young adult literature'",
+    "constraint_logic": "(P31 is 'literary work') AND (P577 > 1956.75) AND (P136 is 'young adult literature')",
+    "new_ground_truth": [
+      "Q5246906"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which book that is a literary work, classified as young adult literature, and released after 1956 did Beverly Cleary write?"
+  },
+  {
+    "original_question": "what books did beverly cleary write?",
+    "source_id": "WebQTrn-18",
+    "original_answer_count": 28,
+    "constraint_description": "is a is 'literary work' AND released date after 1956 AND award received is 'Vermont Golden Dome Book Award'",
+    "constraint_logic": "(P31 is 'literary work') AND (P577 > 1956.75) AND (P166 is 'Vermont Golden Dome Book Award')",
+    "new_ground_truth": [
+      "Q7322438"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which book that is a literary work, released after 1956, and that received the Vermont Golden Dome Book Award did Beverly Cleary write?"
+  },
+  {
+    "original_question": "what movies does taylor lautner play in?",
+    "source_id": "WebQTrn-25",
+    "original_answer_count": 15,
+    "constraint_description": "starring is 'Taylor Lautner' AND released date after 2009 AND duration is less than 122.50 min AND box office is less than $711.9M",
+    "constraint_logic": "(P161 is 'Taylor Lautner') AND (P577 > 2009.0) AND (P2047 < 122.5) AND (P2142 < 711909412.25)",
+    "new_ground_truth": [
+      "Q143716"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Taylor Lautner was released after 2009, has a runtime shorter than 122.5 minutes, and a box office gross of less than $711.9 million?"
+  },
+  {
+    "original_question": "what movies does taylor lautner play in?",
+    "source_id": "WebQTrn-25",
+    "original_answer_count": 15,
+    "constraint_description": "duration is less than 122.50 min AND released date after 2009 AND box office is less than $711.9M AND genre is 'comedy film'",
+    "constraint_logic": "(P2047 < 122.5) AND (P577 > 2009.0) AND (P2142 < 711909412.25) AND (P136 is 'comedy film')",
+    "new_ground_truth": [
+      "Q5611721"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Taylor Lautner released after 2009 is a comedy film, has a runtime shorter than 122.5 minutes, and a box office gross of less than $711.9 million?"
+  },
+  {
+    "original_question": "what movies does taylor lautner play in?",
+    "source_id": "WebQTrn-25",
+    "original_answer_count": 15,
+    "constraint_description": "duration is less than 122.50 min AND released date after 2009 AND box office is more than $224.1M AND genre is 'comedy film'",
+    "constraint_logic": "(P2047 < 122.5) AND (P577 > 2009.0) AND (P2142 > 224125000.0) AND (P136 is 'comedy film')",
+    "new_ground_truth": [
+      "Q5611721"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Taylor Lautner, released after 2009, is a comedy with a runtime shorter than 122.5 minutes and a box office gross of more than $224.1 million?"
+  },
+  {
+    "original_question": "what movies does taylor lautner play in?",
+    "source_id": "WebQTrn-25",
+    "original_answer_count": 15,
+    "constraint_description": "starring is 'Taylor Lautner' AND duration is less than 122.50 min AND released date before 2015 AND genre is 'black comedy'",
+    "constraint_logic": "(P161 is 'Taylor Lautner') AND (P2047 < 122.5) AND (P577 < 2015.0) AND (P136 is 'black comedy')",
+    "new_ground_truth": [
+      "Q656357"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Taylor Lautner, released before 2015, is a black comedy and has a runtime shorter than 122.5 minutes?"
+  },
+  {
+    "original_question": "what movies does taylor lautner play in?",
+    "source_id": "WebQTrn-25",
+    "original_answer_count": 15,
+    "constraint_description": "starring is 'Taylor Lautner' AND duration is less than 122.50 min AND released date before 2015 AND directed by is 'Robert Rodriguez'",
+    "constraint_logic": "(P161 is 'Taylor Lautner') AND (P2047 < 122.5) AND (P577 < 2015.0) AND (P57 is 'Robert Rodriguez')",
+    "new_ground_truth": [
+      "Q656357"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Taylor Lautner and directed by Robert Rodriguez was released before 2015 and has a runtime shorter than 122.5 minutes?"
+  },
+  {
+    "original_question": "what movie is josh hutcherson in?",
+    "source_id": "WebQTrn-49",
+    "original_answer_count": 35,
+    "constraint_description": "is a is 'film' AND released date before 2014 AND duration is more than 95 min AND genre is 'drama film' AND box office is more than $64.3M AND starring is 'Liam Hemsworth' AND budget is more than $100.0M AND award received is 'TV Krant Filmposter Award'",
+    "constraint_logic": "(P31 is 'film') AND (P577 < 2014.5) AND (P2047 > 95.0) AND (P136 is 'drama film') AND (P2142 > 64321501.0) AND (P161 is 'Liam Hemsworth') AND (P2130 > 100000000.0) AND (P166 is 'TV Krant Filmposter Award')",
+    "new_ground_truth": [
+      "Q4142083"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Liam Hemsworth and Josh Hutcherson, classified as a film and a drama, released before 2014, with a runtime longer than 95 minutes, a budget of more than $100.0 million, a box office gross of more than $64.3 million, and that received the TV Krant Filmposter Award?"
+  },
+  {
+    "original_question": "what movie is josh hutcherson in?",
+    "source_id": "WebQTrn-49",
+    "original_answer_count": 35,
+    "constraint_description": "is a is 'film' AND released date before 2014 AND duration is more than 95 min AND genre is 'drama film' AND box office is more than $64.3M AND budget is more than $100.0M AND award received is 'TV Krant Filmposter Award'",
+    "constraint_logic": "(P31 is 'film') AND (P577 < 2014.5) AND (P2047 > 95.0) AND (P136 is 'drama film') AND (P2142 > 64321501.0) AND (P2130 > 100000000.0) AND (P166 is 'TV Krant Filmposter Award')",
+    "new_ground_truth": [
+      "Q4142083"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Josh Hutcherson released before 2014 is a drama film with a runtime longer than 95 minutes, a budget of more than $100.0 million, a box office gross over $64.3 million, and that received the TV Krant Filmposter Award?"
+  },
+  {
+    "original_question": "what movie is josh hutcherson in?",
+    "source_id": "WebQTrn-49",
+    "original_answer_count": 35,
+    "constraint_description": "is a is 'film' AND released date after 2007 AND duration is more than 95 min AND genre is 'drama film' AND box office is more than $64.3M AND budget is less than $145.0M AND starring is 'Liam Hemsworth' AND directed by is 'Francis Lawrence' AND award received is 'TV Krant Filmposter Award'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 2007.5) AND (P2047 > 95.0) AND (P136 is 'drama film') AND (P2142 > 64321501.0) AND (P2130 < 145000000.0) AND (P161 is 'Liam Hemsworth') AND (P57 is 'Francis Lawrence') AND (P166 is 'TV Krant Filmposter Award')",
+    "new_ground_truth": [
+      "Q4142083"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Liam Hemsworth and directed by Francis Lawrence, released after 2007, is a drama film with a runtime longer than 95 minutes, a box office gross of more than $64.3 million, a budget under $145.0 million, and that received the TV Krant Filmposter Award?"
+  },
+  {
+    "original_question": "what movie is josh hutcherson in?",
+    "source_id": "WebQTrn-49",
+    "original_answer_count": 35,
+    "constraint_description": "is a is 'film' AND released date before 2014 AND duration is more than 95 min AND box office is less than $653.4M AND genre is 'thriller film'",
+    "constraint_logic": "(P31 is 'film') AND (P577 < 2014.5) AND (P2047 > 95.0) AND (P2142 < 653428261.0) AND (P136 is 'thriller film')",
+    "new_ground_truth": [
+      "Q14623562"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Josh Hutcherson was released before 2014, has a runtime longer than 95 minutes, is a thriller, and earned less than $653.4 million at the box office?"
+  },
+  {
+    "original_question": "what movie is josh hutcherson in?",
+    "source_id": "WebQTrn-49",
+    "original_answer_count": 35,
+    "constraint_description": "is a is 'film' AND released date after 2007 AND duration is more than 95 min AND box office is less than $653.4M AND genre is 'thriller film'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 2007.5) AND (P2047 > 95.0) AND (P2142 < 653428261.0) AND (P136 is 'thriller film')",
+    "new_ground_truth": [
+      "Q14623562"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Josh Hutcherson, released after 2007, is a thriller film with a runtime longer than 95 minutes and a box office gross of less than $653.4 million?"
+  },
+  {
+    "original_question": "what countries do people speak portuguese?",
+    "source_id": "WebQTrn-60",
+    "original_answer_count": 11,
+    "constraint_description": "is a is 'country' AND founded in before 1992 AND population is more than 284.0K AND area is less than 1.0M sq km AND country is 'Portugal'",
+    "constraint_logic": "(P31 is 'country') AND (P571 < 1992.0) AND (P1082 > 283961.5) AND (P2046 < 1024145.0) AND (P17 is 'Portugal')",
+    "new_ground_truth": [
+      "Q45"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which country where Portuguese is spoken was founded before 1992, has a population of more than 284.0 thousand, an area of less than 1.0 million square kilometers, and is Portugal?"
+  },
+  {
+    "original_question": "what countries do people speak portuguese?",
+    "source_id": "WebQTrn-60",
+    "original_answer_count": 11,
+    "constraint_description": "founded in after 1968 AND is a is 'micronation'",
+    "constraint_logic": "(P571 > 1968.0) AND (P31 is 'micronation')",
+    "new_ground_truth": [
+      "Q19356759"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which country founded after 1968 that is a micronation has Portuguese as a spoken language?"
+  },
+  {
+    "original_question": "what countries do people speak portuguese?",
+    "source_id": "WebQTrn-60",
+    "original_answer_count": 11,
+    "constraint_description": "is a is 'country' AND population is less than 15.7M AND founded in after 1968 AND continent is 'Africa' AND area is less than 36.1K sq km AND country is 'Cape Verde'",
+    "constraint_logic": "(P31 is 'country') AND (P1082 < 15726192.0) AND (P571 > 1968.0) AND (P30 is 'Africa') AND (P2046 < 36125.0) AND (P17 is 'Cape Verde')",
+    "new_ground_truth": [
+      "Q1011"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which country in Africa, founded after 1968 with a population under 15.7 million and an area of less than 36.1 thousand square kilometers, is Cape Verde and has Portuguese as a spoken language?"
+  },
+  {
+    "original_question": "what countries do people speak portuguese?",
+    "source_id": "WebQTrn-60",
+    "original_answer_count": 11,
+    "constraint_description": "is a is 'country' AND founded in before 1992 AND population is less than 15.7M AND continent is 'Africa' AND area is less than 36.1K sq km AND country is 'Cape Verde'",
+    "constraint_logic": "(P31 is 'country') AND (P571 < 1992.0) AND (P1082 < 15726192.0) AND (P30 is 'Africa') AND (P2046 < 36125.0) AND (P17 is 'Cape Verde')",
+    "new_ground_truth": [
+      "Q1011"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which country in Africa, specifically Cape Verde, founded before 1992, with a population under 15.7 million and an area of less than 36.1 thousand square kilometers, has Portuguese as a spoken language?"
+  },
+  {
+    "original_question": "what countries do people speak portuguese?",
+    "source_id": "WebQTrn-60",
+    "original_answer_count": 11,
+    "constraint_description": "population is more than 284.0K AND founded in after 1968 AND founded by is 'Igor Ashurbeyli'",
+    "constraint_logic": "(P1082 > 283961.5) AND (P571 > 1968.0) AND (P112 is 'Igor Ashurbeyli')",
+    "new_ground_truth": [
+      "Q27304761"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which country founded after 1968 by Igor Ashurbeyli has a population of more than 284.0 thousand and where people speak Portuguese?"
+  },
+  {
+    "original_question": "what tv show did joey lawrence play on?",
+    "source_id": "WebQTrn-69",
+    "original_answer_count": 5,
+    "constraint_description": "genre is 'American television sitcom' AND starring is 'Melinda Culea'",
+    "constraint_logic": "(P136 is 'American television sitcom') AND (P161 is 'Melinda Culea')",
+    "new_ground_truth": [
+      "Q821153"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which TV show starring Melinda Culea and of the American television sitcom genre did Joey Lawrence appear in?"
+  },
+  {
+    "original_question": "what tv show did joey lawrence play on?",
+    "source_id": "WebQTrn-69",
+    "original_answer_count": 5,
+    "constraint_description": "genre is 'American television sitcom' AND duration is less than 32.50 min",
+    "constraint_logic": "(P136 is 'American television sitcom') AND (P2047 < 32.5)",
+    "new_ground_truth": [
+      "Q821153"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which TV show starring Joey Lawrence is an American television sitcom with a runtime of less than 32.5 minutes?"
+  },
+  {
+    "original_question": "what tv show did joey lawrence play on?",
+    "source_id": "WebQTrn-69",
+    "original_answer_count": 5,
+    "constraint_description": "genre is 'American television sitcom' AND award received is 'Genesis Award'",
+    "constraint_logic": "(P136 is 'American television sitcom') AND (P166 is 'Genesis Award')",
+    "new_ground_truth": [
+      "Q2056556"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which TV show starring Joey Lawrence is an American television sitcom that received a Genesis Award?"
+  },
+  {
+    "original_question": "what tv show did joey lawrence play on?",
+    "source_id": "WebQTrn-69",
+    "original_answer_count": 5,
+    "constraint_description": "award received is 'Genesis Award' AND duration is more than 32.50 min",
+    "constraint_logic": "(P166 is 'Genesis Award') AND (P2047 > 32.5)",
+    "new_ground_truth": [
+      "Q728443"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which TV show featuring Joey Lawrence that received the Genesis Award has a runtime longer than 32.5 minutes?"
+  },
+  {
+    "original_question": "what tv show did joey lawrence play on?",
+    "source_id": "WebQTrn-69",
+    "original_answer_count": 5,
+    "constraint_description": "award received is 'Genesis Award' AND genre is 'action television series'",
+    "constraint_logic": "(P166 is 'Genesis Award') AND (P136 is 'action television series')",
+    "new_ground_truth": [
+      "Q728443"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which TV show starring Joey Lawrence that is an action television series received the Genesis Award?"
+  },
+  {
+    "original_question": "who was vincent van gogh inspired by?",
+    "source_id": "WebQTrn-80",
+    "original_answer_count": 7,
+    "constraint_description": "born year before 1839 AND died in before 1888 AND occupation is 'diplomat'",
+    "constraint_logic": "(P569 < 1839.0) AND (P570 < 1888.0) AND (P106 is 'diplomat')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person who was a diplomat, born before 1839 and died before 1888, inspired Vincent van Gogh?"
+  },
+  {
+    "original_question": "who was vincent van gogh inspired by?",
+    "source_id": "WebQTrn-80",
+    "original_answer_count": 7,
+    "constraint_description": "died in before 1903 AND born year before 1822 AND educated at is 'University of Cambridge'",
+    "constraint_logic": "(P570 < 1903.0) AND (P569 < 1822.0) AND (P69 is 'University of Cambridge')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person who was born before 1822, died before 1903, and was educated at the University of Cambridge inspired Vincent van Gogh?"
+  },
+  {
+    "original_question": "who was vincent van gogh inspired by?",
+    "source_id": "WebQTrn-80",
+    "original_answer_count": 7,
+    "constraint_description": "died in before 1903 AND born year before 1822 AND citizenship is 'Spanish Netherlands'",
+    "constraint_logic": "(P570 < 1903.0) AND (P569 < 1822.0) AND (P27 is 'Spanish Netherlands')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which artist born before 1822, a citizen of the Spanish Netherlands, and who died before 1903 inspired Vincent van Gogh?"
+  },
+  {
+    "original_question": "who was vincent van gogh inspired by?",
+    "source_id": "WebQTrn-80",
+    "original_answer_count": 7,
+    "constraint_description": "born year before 1839 AND died in before 1888 AND genre is 'nude'",
+    "constraint_logic": "(P569 < 1839.0) AND (P570 < 1888.0) AND (P136 is 'nude')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which artist born before 1839 who died before 1888 and worked in the nude genre inspired Vincent van Gogh?"
+  },
+  {
+    "original_question": "who was vincent van gogh inspired by?",
+    "source_id": "WebQTrn-80",
+    "original_answer_count": 7,
+    "constraint_description": "died in after 1849 AND genre is 'portrait' AND citizenship is 'France' AND educated at is 'lycée Pothier'",
+    "constraint_logic": "(P570 > 1849.0) AND (P136 is 'portrait') AND (P27 is 'France') AND (P69 is 'lycée Pothier')",
+    "new_ground_truth": [
+      "Q37693"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which French portrait artist who studied at lycée Pothier, died after 1849, and inspired Vincent van Gogh?"
+  },
+  {
+    "original_question": "what awards has louis sachar won?",
+    "source_id": "WebQTrn-102",
+    "original_answer_count": 6,
+    "constraint_description": "is a is 'literary award' AND country is 'United States' AND founded in before 2004",
+    "constraint_logic": "(P31 is 'literary award') AND (P17 is 'United States') AND (P571 < 2004.0)",
+    "new_ground_truth": [
+      "Q572316"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which literary award in the United States founded before 2004 has Louis Sachar won?"
+  },
+  {
+    "original_question": "what awards has louis sachar won?",
+    "source_id": "WebQTrn-102",
+    "original_answer_count": 6,
+    "constraint_description": "country is 'United States' AND founded in after 1925 AND is a subclass of is 'award'",
+    "constraint_logic": "(P17 is 'United States') AND (P571 > 1925.5) AND (P279 is 'award')",
+    "new_ground_truth": [
+      "Q572316"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which award in the United States, founded after 1925 and a subclass of award, has Louis Sachar won?"
+  },
+  {
+    "original_question": "what awards has louis sachar won?",
+    "source_id": "WebQTrn-102",
+    "original_answer_count": 6,
+    "constraint_description": "country is 'United States' AND founded in before 1970 AND is a is 'medallion'",
+    "constraint_logic": "(P17 is 'United States') AND (P571 < 1970.0) AND (P31 is 'medallion')",
+    "new_ground_truth": [
+      "Q622813"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which award in the United States, founded before 1970 and a medallion, has Louis Sachar won?"
+  },
+  {
+    "original_question": "what awards has louis sachar won?",
+    "source_id": "WebQTrn-102",
+    "original_answer_count": 6,
+    "constraint_description": "country is 'United States' AND founded in before 2004 AND is a is 'medallion'",
+    "constraint_logic": "(P17 is 'United States') AND (P571 < 2004.0) AND (P31 is 'medallion')",
+    "new_ground_truth": [
+      "Q622813"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which award in the United States, founded before 2004, and classified as a medallion, has Louis Sachar won?"
+  },
+  {
+    "original_question": "what awards has louis sachar won?",
+    "source_id": "WebQTrn-102",
+    "original_answer_count": 6,
+    "constraint_description": "is a is 'literary award' AND founded in after 1970 AND country is 'Estonia'",
+    "constraint_logic": "(P31 is 'literary award') AND (P571 > 1970.0) AND (P17 is 'Estonia')",
+    "new_ground_truth": [
+      "Q12371750"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which literary award founded after 1970 in Estonia has Louis Sachar won?"
+  },
+  {
+    "original_question": "what did shawnee smith play in?",
+    "source_id": "WebQTrn-115",
+    "original_answer_count": 32,
+    "constraint_description": "is a is 'film' AND released date after 1995 AND duration is less than 109.50 min AND genre is 'horror film' AND directed by is 'Kevin Greutert' AND starring is 'Chester Bennington'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 1995.0) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P57 is 'Kevin Greutert') AND (P161 is 'Chester Bennington')",
+    "new_ground_truth": [
+      "Q676284"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
+  },
+  {
+    "original_question": "what did shawnee smith play in?",
+    "source_id": "WebQTrn-115",
+    "original_answer_count": 32,
+    "constraint_description": "released date before 2008 AND duration is less than 109.50 min AND genre is 'horror film' AND starring is 'Shawnee Smith' AND is a is 'television film'",
+    "constraint_logic": "(P577 < 2008.5) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P161 is 'Shawnee Smith') AND (P31 is 'television film')",
+    "new_ground_truth": [
+      "Q3282529"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which television film starring Shawnee Smith, released before 2008, is a horror film with a runtime shorter than 109.5 minutes?"
+  },
+  {
+    "original_question": "what did shawnee smith play in?",
+    "source_id": "WebQTrn-115",
+    "original_answer_count": 32,
+    "constraint_description": "released date before 2008 AND duration is less than 109.50 min AND genre is 'horror film' AND starring is 'Shawnee Smith' AND directed by is 'Fred Walton'",
+    "constraint_logic": "(P577 < 2008.5) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P161 is 'Shawnee Smith') AND (P57 is 'Fred Walton')",
+    "new_ground_truth": [
+      "Q3282529"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which horror film starring Shawnee Smith and directed by Fred Walton was released before 2008 and has a runtime shorter than 109.5 minutes?"
+  },
+  {
+    "original_question": "what did shawnee smith play in?",
+    "source_id": "WebQTrn-115",
+    "original_answer_count": 32,
+    "constraint_description": "released date before 2008 AND duration is more than 92.50 min AND genre is 'horror film' AND starring is 'Shawnee Smith'",
+    "constraint_logic": "(P577 < 2008.5) AND (P2047 > 92.5) AND (P136 is 'horror film') AND (P161 is 'Shawnee Smith')",
+    "new_ground_truth": [
+      "Q3282529"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which horror film starring Shawnee Smith, released before 2008, with a runtime longer than 92.5 minutes, did she appear in?"
+  },
+  {
+    "original_question": "what did shawnee smith play in?",
+    "source_id": "WebQTrn-115",
+    "original_answer_count": 32,
+    "constraint_description": "is a is 'film' AND released date before 2008 AND duration is more than 92.50 min AND directed by is 'John Huston'",
+    "constraint_logic": "(P31 is 'film') AND (P577 < 2008.5) AND (P2047 > 92.5) AND (P57 is 'John Huston')",
+    "new_ground_truth": [
+      "Q566890"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Shawnee Smith and directed by John Huston was released before 2008 and has a runtime longer than 92.5 minutes?"
+  },
+  {
+    "original_question": "what movie did angelina jolie direct?",
+    "source_id": "WebQTrn-124",
+    "original_answer_count": 6,
+    "constraint_description": "duration is more than 85.75 min AND released date before 2018 AND genre is 'docudrama'",
+    "constraint_logic": "(P2047 > 85.75) AND (P577 < 2018.75) AND (P136 is 'docudrama')",
+    "new_ground_truth": [
+      "Q22908422"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie directed by Angelina Jolie is a docudrama released before 2018 and has a runtime longer than 85.75 minutes?"
+  },
+  {
+    "original_question": "what movie did angelina jolie direct?",
+    "source_id": "WebQTrn-124",
+    "original_answer_count": 6,
+    "constraint_description": "released date after 2010 AND duration is less than 136.25 min AND genre is 'docudrama'",
+    "constraint_logic": "(P577 > 2010.0) AND (P2047 < 136.25) AND (P136 is 'docudrama')",
+    "new_ground_truth": [
+      "Q22908422"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie directed by Angelina Jolie was released after 2010, is a docudrama, and has a runtime shorter than 136.25 minutes?"
+  },
+  {
+    "original_question": "what movie did angelina jolie direct?",
+    "source_id": "WebQTrn-124",
+    "original_answer_count": 6,
+    "constraint_description": "released date before 2018 AND duration is less than 136.25 min AND genre is 'docudrama'",
+    "constraint_logic": "(P577 < 2018.75) AND (P2047 < 136.25) AND (P136 is 'docudrama')",
+    "new_ground_truth": [
+      "Q22908422"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie directed by Angelina Jolie was released before 2018, is a docudrama, and has a runtime shorter than 136.25 minutes?"
+  },
+  {
+    "original_question": "what movie did angelina jolie direct?",
+    "source_id": "WebQTrn-124",
+    "original_answer_count": 6,
+    "constraint_description": "released date after 2010 AND duration is less than 136.25 min AND genre is 'drama film' AND starring is 'Salma Hayek'",
+    "constraint_logic": "(P577 > 2010.0) AND (P2047 < 136.25) AND (P136 is 'drama film') AND (P161 is 'Salma Hayek')",
+    "new_ground_truth": [
+      "Q113380203"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie directed by Angelina Jolie was released after 2010, stars Salma Hayek, is a drama film, and has a runtime of less than 136.25 minutes?"
+  },
+  {
+    "original_question": "what movie did angelina jolie direct?",
+    "source_id": "WebQTrn-124",
+    "original_answer_count": 6,
+    "constraint_description": "duration is more than 85.75 min AND genre is 'drama film' AND released date after 2014 AND starring is 'Salma Hayek'",
+    "constraint_logic": "(P2047 > 85.75) AND (P136 is 'drama film') AND (P577 > 2014.5) AND (P161 is 'Salma Hayek')",
+    "new_ground_truth": [
+      "Q113380203"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie directed by Angelina Jolie, starring Salma Hayek, released after 2014, classified as a drama film, and with a runtime longer than 85.75 minutes?"
+  },
+  {
+    "original_question": "who all has dated taylor swift?",
+    "source_id": "WebQTrn-134",
+    "original_answer_count": 11,
+    "constraint_description": "born year before 1992 AND occupation is 'actor' AND citizenship is 'United States' AND educated at is 'Carlton J. Kell High School'",
+    "constraint_logic": "(P569 < 1992.0) AND (P106 is 'actor') AND (P27 is 'United States') AND (P69 is 'Carlton J. Kell High School')",
+    "new_ground_truth": [
+      "Q316541"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which American actor born before 1992 who was educated at Carlton J. Kell High School has dated Taylor Swift?"
+  },
+  {
+    "original_question": "who all has dated taylor swift?",
+    "source_id": "WebQTrn-134",
+    "original_answer_count": 11,
+    "constraint_description": "born year before 1992 AND citizenship is 'United States' AND height is less than 1.89 m AND occupation is 'executive producer'",
+    "constraint_logic": "(P569 < 1992.0) AND (P27 is 'United States') AND (P2048 < 1.8929) AND (P106 is 'executive producer')",
+    "new_ground_truth": [
+      "Q133313"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person born before 1992, a United States citizen under 1.89 meters tall and working as an executive producer, has dated Taylor Swift?"
+  },
+  {
+    "original_question": "who all has dated taylor swift?",
+    "source_id": "WebQTrn-134",
+    "original_answer_count": 11,
+    "constraint_description": "born year before 1992 AND citizenship is 'United States' AND height is more than 1.72 m AND occupation is 'executive producer'",
+    "constraint_logic": "(P569 < 1992.0) AND (P27 is 'United States') AND (P2048 > 1.72) AND (P106 is 'executive producer')",
+    "new_ground_truth": [
+      "Q133313"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person born before 1992, a United States citizen taller than 1.72 m, and working as an executive producer, has dated Taylor Swift?"
+  },
+  {
+    "original_question": "who all has dated taylor swift?",
+    "source_id": "WebQTrn-134",
+    "original_answer_count": 11,
+    "constraint_description": "born year before 1992 AND citizenship is 'United States' AND height is less than 1.89 m AND award received is 'BAFTA Award for Best Actor in a Supporting Role'",
+    "constraint_logic": "(P569 < 1992.0) AND (P27 is 'United States') AND (P2048 < 1.8929) AND (P166 is 'BAFTA Award for Best Actor in a Supporting Role')",
+    "new_ground_truth": [
+      "Q133313"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person who was born before 1992, is a United States citizen, is under 1.89 meters tall, and has received the BAFTA Award for Best Actor in a Supporting Role has dated Taylor Swift?"
+  },
+  {
+    "original_question": "who all has dated taylor swift?",
+    "source_id": "WebQTrn-134",
+    "original_answer_count": 11,
+    "constraint_description": "born year before 1992 AND citizenship is 'United States' AND height is more than 1.72 m AND award received is 'BAFTA Award for Best Actor in a Supporting Role'",
+    "constraint_logic": "(P569 < 1992.0) AND (P27 is 'United States') AND (P2048 > 1.72) AND (P166 is 'BAFTA Award for Best Actor in a Supporting Role')",
+    "new_ground_truth": [
+      "Q133313"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person who was born before 1992, is a United States citizen, is taller than 1.72 m, and has received the BAFTA Award for Best Actor in a Supporting Role has dated Taylor Swift?"
+  },
+  {
+    "original_question": "who was elected president of the philippines?",
+    "source_id": "WebQTrn-157",
+    "original_answer_count": 45,
+    "constraint_description": "citizenship is 'United States' AND gender is 'male' AND born year after 1826 AND occupation is 'politician' AND educated at is 'Texas A&M University'",
+    "constraint_logic": "(P27 is 'United States') AND (P21 is 'male') AND (P569 > 1826.5) AND (P106 is 'politician') AND (P69 is 'Texas A&M University')",
+    "new_ground_truth": [
+      "Q215057"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which politician, a male United States citizen born after 1826 and educated at Texas A&M University, was elected president of the Philippines?"
+  },
+  {
+    "original_question": "who was elected president of the philippines?",
+    "source_id": "WebQTrn-157",
+    "original_answer_count": 45,
+    "constraint_description": "citizenship is 'United States' AND gender is 'male' AND born year after 1826 AND occupation is 'politician' AND award received is 'National Defense Service Medal'",
+    "constraint_logic": "(P27 is 'United States') AND (P21 is 'male') AND (P569 > 1826.5) AND (P106 is 'politician') AND (P166 is 'National Defense Service Medal')",
+    "new_ground_truth": [
+      "Q215057"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which politician, a male United States citizen born after 1826 who received the National Defense Service Medal, was elected president of the Philippines?"
+  },
+  {
+    "original_question": "who was elected president of the philippines?",
+    "source_id": "WebQTrn-157",
+    "original_answer_count": 45,
+    "constraint_description": "is a is 'human' AND gender is 'male' AND born year after 1826 AND died in after 1896 AND occupation is 'lawyer' AND educated at is 'University of Texas at Austin'",
+    "constraint_logic": "(P31 is 'human') AND (P21 is 'male') AND (P569 > 1826.5) AND (P570 > 1896.5) AND (P106 is 'lawyer') AND (P69 is 'University of Texas at Austin')",
+    "new_ground_truth": [
+      "Q402676"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which male human who was educated at the University of Texas at Austin, born after 1826, died after 1896, and worked as a lawyer was elected President of the Philippines?"
+  },
+  {
+    "original_question": "who was elected president of the philippines?",
+    "source_id": "WebQTrn-157",
+    "original_answer_count": 45,
+    "constraint_description": "citizenship is 'United States' AND gender is 'male' AND born year before 1907 AND died in after 1896 AND occupation is 'lawyer' AND educated at is 'University of Texas at Austin'",
+    "constraint_logic": "(P27 is 'United States') AND (P21 is 'male') AND (P569 < 1907.75) AND (P570 > 1896.5) AND (P106 is 'lawyer') AND (P69 is 'University of Texas at Austin')",
+    "new_ground_truth": [
+      "Q402676"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person who was elected President of the Philippines is a male United States citizen, was born before 1907, died after 1896, worked as a lawyer, and was educated at the University of Texas at Austin?"
+  },
+  {
+    "original_question": "who was elected president of the philippines?",
+    "source_id": "WebQTrn-157",
+    "original_answer_count": 45,
+    "constraint_description": "is a is 'human' AND gender is 'male' AND born year before 1907 AND died in after 1896 AND occupation is 'lawyer' AND educated at is 'University of Texas at Austin'",
+    "constraint_logic": "(P31 is 'human') AND (P21 is 'male') AND (P569 < 1907.75) AND (P570 > 1896.5) AND (P106 is 'lawyer') AND (P69 is 'University of Texas at Austin')",
+    "new_ground_truth": [
+      "Q402676"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which male human who was educated at the University of Texas at Austin, worked as a lawyer, was born before 1907, died after 1896, and was elected President of the Philippines?"
+  },
+  {
+    "original_question": "who do derek fisher play for?",
+    "source_id": "WebQTrn-165",
+    "original_answer_count": 6,
+    "constraint_description": "league is 'National Basketball Association' AND founded in after 1946 AND founded by is 'Don Carter'",
+    "constraint_logic": "(P118 is 'National Basketball Association') AND (P571 > 1946.0) AND (P112 is 'Don Carter')",
+    "new_ground_truth": [
+      "Q132893"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which NBA team, founded after 1946 by Don Carter, does Derek Fisher play for?"
+  },
+  {
+    "original_question": "who do derek fisher play for?",
+    "source_id": "WebQTrn-165",
+    "original_answer_count": 6,
+    "constraint_description": "league is 'National Basketball Association' AND founded in after 1946 AND headquartered in is 'Dallas'",
+    "constraint_logic": "(P118 is 'National Basketball Association') AND (P571 > 1946.0) AND (P159 is 'Dallas')",
+    "new_ground_truth": [
+      "Q132893"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which NBA team, founded after 1946 and headquartered in Dallas, does Derek Fisher play for?"
+  },
+  {
+    "original_question": "who do derek fisher play for?",
+    "source_id": "WebQTrn-165",
+    "original_answer_count": 6,
+    "constraint_description": "league is 'National Basketball Association' AND founded in before 1977 AND headquartered in is 'Los Angeles'",
+    "constraint_logic": "(P118 is 'National Basketball Association') AND (P571 < 1977.0) AND (P159 is 'Los Angeles')",
+    "new_ground_truth": [
+      "Q121783"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which NBA team founded before 1977 and headquartered in Los Angeles does Derek Fisher play for?"
+  },
+  {
+    "original_question": "who do derek fisher play for?",
+    "source_id": "WebQTrn-165",
+    "original_answer_count": 6,
+    "constraint_description": "league is 'National Basketball Association' AND founded in before 1977 AND headquartered in is 'Oklahoma City'",
+    "constraint_logic": "(P118 is 'National Basketball Association') AND (P571 < 1977.0) AND (P159 is 'Oklahoma City')",
+    "new_ground_truth": [
+      "Q180950"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which NBA team founded before 1977 and headquartered in Oklahoma City does Derek Fisher play for?"
+  },
+  {
+    "original_question": "who do derek fisher play for?",
+    "source_id": "WebQTrn-165",
+    "original_answer_count": 6,
+    "constraint_description": "league is 'National Basketball Association' AND founded in before 1977 AND award received is 'Larry O'Brien Championship Trophy'",
+    "constraint_logic": "(P118 is 'National Basketball Association') AND (P571 < 1977.0) AND (P166 is 'Larry O'Brien Championship Trophy')",
+    "new_ground_truth": [
+      "Q157376"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which NBA team that was founded before 1977 and has received the Larry O'Brien Championship Trophy does Derek Fisher play for?"
+  },
+  {
+    "original_question": "what are eu countries?",
+    "source_id": "WebQTrn-191",
+    "original_answer_count": 28,
+    "constraint_description": "continent is 'Europe' AND area is more than 42.9K sq km AND founded in after 1795 AND population is more than 2.1M AND country is 'Germany'",
+    "constraint_logic": "(P30 is 'Europe') AND (P2046 > 42925.46) AND (P571 > 1795.0) AND (P1082 > 2116972.0) AND (P17 is 'Germany')",
+    "new_ground_truth": [
+      "Q183"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European country founded after 1795 with an area of more than 42.9 thousand square kilometers, a population of over 2.1 million, and named Germany?"
+  },
+  {
+    "original_question": "what are eu countries?",
+    "source_id": "WebQTrn-191",
+    "original_answer_count": 28,
+    "constraint_description": "is a is 'country' AND founded in after 1795 AND area is more than 42.9K sq km AND population is more than 2.1M AND country is 'Germany'",
+    "constraint_logic": "(P31 is 'country') AND (P571 > 1795.0) AND (P2046 > 42925.46) AND (P1082 > 2116972.0) AND (P17 is 'Germany')",
+    "new_ground_truth": [
+      "Q183"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which country in the EU is Germany, founded after 1795, with an area of more than 42.9 thousand square kilometers and a population of more than 2.1 million?"
+  },
+  {
+    "original_question": "what are eu countries?",
+    "source_id": "WebQTrn-191",
+    "original_answer_count": 28,
+    "constraint_description": "continent is 'Europe' AND area is more than 42.9K sq km AND founded in before 1960 AND population is more than 2.1M AND country is 'Germany'",
+    "constraint_logic": "(P30 is 'Europe') AND (P2046 > 42925.46) AND (P571 < 1960.0) AND (P1082 > 2116972.0) AND (P17 is 'Germany')",
+    "new_ground_truth": [
+      "Q183"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European country founded before 1960, with an area of more than 42.9 thousand square kilometers and a population of over 2.1 million, is Germany?"
+  },
+  {
+    "original_question": "what are eu countries?",
+    "source_id": "WebQTrn-191",
+    "original_answer_count": 28,
+    "constraint_description": "is a is 'country' AND area is less than 302.1K sq km AND founded in before 1960 AND population is less than 17.9M AND country is 'Latvia'",
+    "constraint_logic": "(P31 is 'country') AND (P2046 < 302068.0) AND (P571 < 1960.0) AND (P1082 < 17942942.0) AND (P17 is 'Latvia')",
+    "new_ground_truth": [
+      "Q211"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which EU country that is a country was founded before 1960, has an area of less than 302.1 thousand square kilometers, and a population of less than 17.9 million — specifically Latvia?"
+  },
+  {
+    "original_question": "what are eu countries?",
+    "source_id": "WebQTrn-191",
+    "original_answer_count": 28,
+    "constraint_description": "continent is 'Europe' AND area is more than 42.9K sq km AND founded in after 1795 AND population is less than 17.9M AND country is 'Latvia'",
+    "constraint_logic": "(P30 is 'Europe') AND (P2046 > 42925.46) AND (P571 > 1795.0) AND (P1082 < 17942942.0) AND (P17 is 'Latvia')",
+    "new_ground_truth": [
+      "Q211"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European country founded after 1795, with an area greater than 42.9 thousand square kilometers and a population under 17.9 million, is Latvia?"
+  },
+  {
+    "original_question": "what influenced vincent van gogh work?",
+    "source_id": "WebQTrn-192",
+    "original_answer_count": 7,
+    "constraint_description": "died in before 1903 AND born year before 1822 AND occupation is 'diplomat'",
+    "constraint_logic": "(P570 < 1903.0) AND (P569 < 1822.0) AND (P106 is 'diplomat')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which diplomat born before 1822 and who died before 1903 influenced Vincent van Gogh's work?"
+  },
+  {
+    "original_question": "what influenced vincent van gogh work?",
+    "source_id": "WebQTrn-192",
+    "original_answer_count": 7,
+    "constraint_description": "born year before 1839 AND died in before 1888 AND citizenship is 'Spanish Netherlands'",
+    "constraint_logic": "(P569 < 1839.0) AND (P570 < 1888.0) AND (P27 is 'Spanish Netherlands')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which artist born before 1839 who died before 1888 and whose citizenship was Spanish Netherlands influenced Vincent van Gogh's work?"
+  },
+  {
+    "original_question": "what influenced vincent van gogh work?",
+    "source_id": "WebQTrn-192",
+    "original_answer_count": 7,
+    "constraint_description": "born year before 1839 AND died in before 1888 AND genre is 'nude'",
+    "constraint_logic": "(P569 < 1839.0) AND (P570 < 1888.0) AND (P136 is 'nude')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which artist born before 1839 who died before 1888 and worked in the nude genre influenced Vincent van Gogh?"
+  },
+  {
+    "original_question": "what influenced vincent van gogh work?",
+    "source_id": "WebQTrn-192",
+    "original_answer_count": 7,
+    "constraint_description": "died in before 1903 AND born year before 1822 AND citizenship is 'Spanish Netherlands'",
+    "constraint_logic": "(P570 < 1903.0) AND (P569 < 1822.0) AND (P27 is 'Spanish Netherlands')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which artist born before 1822, a citizen of the Spanish Netherlands, and who died before 1903 influenced Vincent van Gogh's work?"
+  },
+  {
+    "original_question": "what influenced vincent van gogh work?",
+    "source_id": "WebQTrn-192",
+    "original_answer_count": 7,
+    "constraint_description": "died in before 1903 AND born year before 1822 AND genre is 'nude'",
+    "constraint_logic": "(P570 < 1903.0) AND (P569 < 1822.0) AND (P136 is 'nude')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which artist who was born before 1822, died before 1903, and worked in the nude genre influenced Vincent van Gogh?"
+  },
+  {
+    "original_question": "what time zones are there in the us?",
+    "source_id": "WebQTrn-193",
+    "original_answer_count": 16,
+    "constraint_description": "is a is 'standard time zone in North America' AND country is 'United States'",
+    "constraint_logic": "(P31 is 'standard time zone in North America') AND (P17 is 'United States')",
+    "new_ground_truth": [
+      "Q3238805"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which standard time zone in North America applies to the United States?"
+  },
+  {
+    "original_question": "what time zones are there in the us?",
+    "source_id": "WebQTrn-193",
+    "original_answer_count": 16,
+    "constraint_description": "is a is 'time zone' AND country is 'American Samoa'",
+    "constraint_logic": "(P31 is 'time zone') AND (P17 is 'American Samoa')",
+    "new_ground_truth": [
+      "Q4816926"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which time zone in American Samoa is a time zone?"
+  },
+  {
+    "original_question": "what time zones are there in the us?",
+    "source_id": "WebQTrn-193",
+    "original_answer_count": 16,
+    "constraint_description": "country is 'United States' AND is a is 'time zone'",
+    "constraint_logic": "(P17 is 'United States') AND (P31 is 'time zone')",
+    "new_ground_truth": [
+      "Q3446496"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which time zone in the United States is a time zone?"
+  },
+  {
+    "original_question": "what are the 5 biggest cities in the usa?",
+    "source_id": "WebQTrn-194",
+    "original_answer_count": 5,
+    "constraint_description": "founded in before 1792 AND population is more than 135.2K AND area is less than 1.3K sq km AND elevation is more than 32 m",
+    "constraint_logic": "(P571 < 1792.0) AND (P1082 > 135220.5) AND (P2046 < 1257.7607745) AND (P2044 > 32.0)",
+    "new_ground_truth": [
+      "Q88"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which US city founded before 1792 has a population of more than 135.2 thousand, an area of less than 1.3 thousand square kilometers, and an elevation above 32 meters?"
+  },
+  {
+    "original_question": "what are the 5 biggest cities in the usa?",
+    "source_id": "WebQTrn-194",
+    "original_answer_count": 5,
+    "constraint_description": "area is less than 1.3K sq km AND population is less than 4.4M AND founded in before 1792 AND elevation is less than 94 m",
+    "constraint_logic": "(P2046 < 1257.7607745) AND (P1082 < 4362517.5) AND (P571 < 1792.0) AND (P2044 < 94.0)",
+    "new_ground_truth": [
+      "Q88"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which US city founded before 1792 has an area of less than 1.3 thousand square kilometers, a population under 4.4 million, and an elevation below 94 meters?"
+  },
+  {
+    "original_question": "what are the 5 biggest cities in the usa?",
+    "source_id": "WebQTrn-194",
+    "original_answer_count": 5,
+    "constraint_description": "area is less than 1.3K sq km AND elevation is less than 130 m AND population is more than 135.2K AND founded in after 1672",
+    "constraint_logic": "(P2046 < 1257.7607745) AND (P2044 < 130.0) AND (P1082 > 135220.5) AND (P571 > 1672.5)",
+    "new_ground_truth": [
+      "Q88"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which US city founded after 1672 has a population of more than 135.2 thousand, an elevation under 130 meters, and an area of less than 1.3 thousand square kilometers?"
+  },
+  {
+    "original_question": "what are the 5 biggest cities in the usa?",
+    "source_id": "WebQTrn-194",
+    "original_answer_count": 5,
+    "constraint_description": "elevation is more than 32 m AND founded in before 1792 AND area is more than 68 sq km AND population is more than 135.2K",
+    "constraint_logic": "(P2044 > 32.0) AND (P571 < 1792.0) AND (P2046 > 68.14516) AND (P1082 > 135220.5)",
+    "new_ground_truth": [
+      "Q65"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which US city founded before 1792 has a population of more than 135.2 thousand, an elevation above 32 meters, and an area of more than 68 square kilometers?"
+  },
+  {
+    "original_question": "what are the 5 biggest cities in the usa?",
+    "source_id": "WebQTrn-194",
+    "original_answer_count": 5,
+    "constraint_description": "population is less than 4.4M AND founded in before 1792 AND area is more than 68 sq km AND continent is 'North America'",
+    "constraint_logic": "(P1082 < 4362517.5) AND (P571 < 1792.0) AND (P2046 > 68.14516) AND (P30 is 'North America')",
+    "new_ground_truth": [
+      "Q65"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which US city founded before 1792, located in North America, has a population of less than 4.4 million and an area of more than 68 square kilometers?"
+  },
+  {
+    "original_question": "what countries did queen victoria rule?",
+    "source_id": "WebQTrn-197",
+    "original_answer_count": 5,
+    "constraint_description": "founded in before 1924 AND continent is 'Europe' AND area is less than 3.8M sq km AND population is more than 18.3M",
+    "constraint_logic": "(P571 < 1924.5) AND (P30 is 'Europe') AND (P2046 < 3766728.0) AND (P1082 > 18280132.5)",
+    "new_ground_truth": [
+      "Q174193"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European country founded before 1924, with an area under 3.8 million square kilometers and a population of more than 18.3 million, was ruled by Queen Victoria?"
+  },
+  {
+    "original_question": "what countries did queen victoria rule?",
+    "source_id": "WebQTrn-197",
+    "original_answer_count": 5,
+    "constraint_description": "founded in after 1754 AND continent is 'Europe' AND area is less than 3.8M sq km AND is a is 'historical country'",
+    "constraint_logic": "(P571 > 1754.0) AND (P30 is 'Europe') AND (P2046 < 3766728.0) AND (P31 is 'historical country')",
+    "new_ground_truth": [
+      "Q174193"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European historical country founded after 1754 did Queen Victoria rule and that has an area of less than 3.8 million square kilometers?"
+  },
+  {
+    "original_question": "what countries did queen victoria rule?",
+    "source_id": "WebQTrn-197",
+    "original_answer_count": 5,
+    "constraint_description": "founded in after 1754 AND continent is 'Europe' AND area is more than 233.9K sq km AND is a is 'historical country'",
+    "constraint_logic": "(P571 > 1754.0) AND (P30 is 'Europe') AND (P2046 > 233856.5) AND (P31 is 'historical country')",
+    "new_ground_truth": [
+      "Q174193"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European historical country founded after 1754 has an area of more than 233.9 thousand square kilometers that Queen Victoria ruled?"
+  },
+  {
+    "original_question": "what countries did queen victoria rule?",
+    "source_id": "WebQTrn-197",
+    "original_answer_count": 5,
+    "constraint_description": "founded in after 1754 AND continent is 'Europe' AND population is less than 255.2M AND is a is 'historical country'",
+    "constraint_logic": "(P571 > 1754.0) AND (P30 is 'Europe') AND (P1082 < 255233194.75) AND (P31 is 'historical country')",
+    "new_ground_truth": [
+      "Q174193"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European historical country founded after 1754, with a population under 255.2 million, was ruled by Queen Victoria?"
+  },
+  {
+    "original_question": "what countries did queen victoria rule?",
+    "source_id": "WebQTrn-197",
+    "original_answer_count": 5,
+    "constraint_description": "continent is 'Europe' AND founded in after 1754 AND population is more than 18.3M AND area is less than 278.8K sq km",
+    "constraint_logic": "(P30 is 'Europe') AND (P571 > 1754.0) AND (P1082 > 18280132.5) AND (P2046 < 278794.0)",
+    "new_ground_truth": [
+      "Q145"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European country founded after 1754 has a population of more than 18.3 million and an area of less than 278.8 thousand square kilometers that Queen Victoria ruled?"
+  },
+  {
+    "original_question": "what movies did diana ross play in?",
+    "source_id": "WebQTrn-203",
+    "original_answer_count": 6,
+    "constraint_description": "released date after 1974 AND duration is more than 90 min AND genre is 'drama film' AND directed by is 'Larry Elikann'",
+    "constraint_logic": "(P577 > 1974.25) AND (P2047 > 90.0) AND (P136 is 'drama film') AND (P57 is 'Larry Elikann')",
+    "new_ground_truth": [
+      "Q7111530"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Diana Ross and directed by Larry Elikann was released after 1974, has a runtime longer than 90 minutes, and is a drama film?"
+  },
+  {
+    "original_question": "what movies did diana ross play in?",
+    "source_id": "WebQTrn-203",
+    "original_answer_count": 6,
+    "constraint_description": "released date before 2012 AND duration is less than 140 min AND genre is 'drama film' AND is a is 'television film'",
+    "constraint_logic": "(P577 < 2012.75) AND (P2047 < 140.0) AND (P136 is 'drama film') AND (P31 is 'television film')",
+    "new_ground_truth": [
+      "Q7111530"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which drama television film starring Diana Ross was released before 2012 and has a runtime shorter than 140 minutes?"
+  },
+  {
+    "original_question": "what movies did diana ross play in?",
+    "source_id": "WebQTrn-203",
+    "original_answer_count": 6,
+    "constraint_description": "released date after 1974 AND duration is less than 140 min AND starring is 'Diana Ross' AND directed by is 'Larry Elikann'",
+    "constraint_logic": "(P577 > 1974.25) AND (P2047 < 140.0) AND (P161 is 'Diana Ross') AND (P57 is 'Larry Elikann')",
+    "new_ground_truth": [
+      "Q7111530"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Diana Ross and directed by Larry Elikann was released after 1974 and has a runtime shorter than 140 minutes?"
+  },
+  {
+    "original_question": "what movies did diana ross play in?",
+    "source_id": "WebQTrn-203",
+    "original_answer_count": 6,
+    "constraint_description": "released date after 1974 AND is a is 'film' AND genre is 'documentary film' AND starring is 'Stevie Wonder'",
+    "constraint_logic": "(P577 > 1974.25) AND (P31 is 'film') AND (P136 is 'documentary film') AND (P161 is 'Stevie Wonder')",
+    "new_ground_truth": [
+      "Q124165657"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Stevie Wonder classified as a documentary and released after 1974 features Diana Ross?"
+  },
+  {
+    "original_question": "what movies did diana ross play in?",
+    "source_id": "WebQTrn-203",
+    "original_answer_count": 6,
+    "constraint_description": "is a is 'film' AND released date after 1974 AND genre is 'documentary film' AND directed by is 'Bao Nguyen'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 1974.25) AND (P136 is 'documentary film') AND (P57 is 'Bao Nguyen')",
+    "new_ground_truth": [
+      "Q124165657"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Diana Ross, directed by Bao Nguyen, is a documentary released after 1974?"
+  },
+  {
+    "original_question": "who won golden boot?",
+    "source_id": "WebQTrn-206",
+    "original_answer_count": 5,
+    "constraint_description": "height is less than 1.86 m AND born year after 1974 AND mass is less than 82 kg AND award received is 'Premier League Golden Boot'",
+    "constraint_logic": "(P2048 < 1.865) AND (P569 > 1974.5) AND (P2067 < 82.0) AND (P166 is 'Premier League Golden Boot')",
+    "new_ground_truth": [
+      "Q119562"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which player born after 1974, with a height under 1.86 m and a mass under 82 kg, received the Premier League Golden Boot?"
+  },
+  {
+    "original_question": "who won golden boot?",
+    "source_id": "WebQTrn-206",
+    "original_answer_count": 5,
+    "constraint_description": "born year after 1974 AND height is less than 1.86 m AND mass is less than 86 kg AND award received is 'Premier League Golden Boot'",
+    "constraint_logic": "(P569 > 1974.5) AND (P2048 < 1.865) AND (P2067 < 86.0) AND (P166 is 'Premier League Golden Boot')",
+    "new_ground_truth": [
+      "Q119562"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which player born after 1974, shorter than 1.86 meters and weighing less than 86 kilograms, received the Premier League Golden Boot?"
+  },
+  {
+    "original_question": "who won golden boot?",
+    "source_id": "WebQTrn-206",
+    "original_answer_count": 5,
+    "constraint_description": "born year before 1990 AND height is less than 1.83 m AND mass is less than 82 kg",
+    "constraint_logic": "(P569 < 1990.5) AND (P2048 < 1.83) AND (P2067 < 82.0)",
+    "new_ground_truth": [
+      "Q119562"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which player who was born before 1990, is shorter than 1.83 meters, and weighs less than 82 kilograms won the Golden Boot?"
+  },
+  {
+    "original_question": "who won golden boot?",
+    "source_id": "WebQTrn-206",
+    "original_answer_count": 5,
+    "constraint_description": "height is more than 1.76 m AND born year after 1974 AND award received is 'Member of the Order of the British Empire'",
+    "constraint_logic": "(P2048 > 1.76) AND (P569 > 1974.5) AND (P166 is 'Member of the Order of the British Empire')",
+    "new_ground_truth": [
+      "Q969725"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which person over 1.76 meters tall, born after 1974, and who received the award Member of the Order of the British Empire won the Golden Boot?"
+  },
+  {
+    "original_question": "who won golden boot?",
+    "source_id": "WebQTrn-206",
+    "original_answer_count": 5,
+    "constraint_description": "height is more than 1.76 m AND born year after 1974 AND citizenship is 'United Kingdom'",
+    "constraint_logic": "(P2048 > 1.76) AND (P569 > 1974.5) AND (P27 is 'United Kingdom')",
+    "new_ground_truth": [
+      "Q969725"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which footballer born after 1974, holding United Kingdom citizenship and taller than 1.76 meters, won the Golden Boot?"
+  },
+  {
+    "original_question": "where is the thames river located?",
+    "source_id": "WebQTrn-208",
+    "original_answer_count": 9,
+    "constraint_description": "area is less than 3.6K sq km AND population is less than 1.7M AND is a is 'non-metropolitan county'",
+    "constraint_logic": "(P2046 < 3577.5455) AND (P1082 < 1655591.0) AND (P31 is 'non-metropolitan county')",
+    "new_ground_truth": [
+      "Q21694733"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which non-metropolitan county with an area of less than 3.6 thousand square kilometers and a population under 1.7 million contains the River Thames?"
+  },
+  {
+    "original_question": "where is the thames river located?",
+    "source_id": "WebQTrn-208",
+    "original_answer_count": 9,
+    "constraint_description": "population is less than 1.7M AND area is more than 1.6K sq km AND is a is 'non-metropolitan county'",
+    "constraint_logic": "(P1082 < 1655591.0) AND (P2046 > 1615.87715) AND (P31 is 'non-metropolitan county')",
+    "new_ground_truth": [
+      "Q21694733"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which non-metropolitan county with a population of less than 1.7 million and an area of more than 1.6 thousand square kilometers contains the Thames River?"
+  },
+  {
+    "original_question": "where is the thames river located?",
+    "source_id": "WebQTrn-208",
+    "original_answer_count": 9,
+    "constraint_description": "population is more than 656.6K AND area is more than 1.6K sq km AND headquartered in is 'Reigate'",
+    "constraint_logic": "(P1082 > 656604.5) AND (P2046 > 1615.87715) AND (P159 is 'Reigate')",
+    "new_ground_truth": [
+      "Q23276"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which place headquartered in Reigate has a population of more than 656.6 thousand and an area of more than 1.6 thousand square kilometers?"
+  },
+  {
+    "original_question": "where is the thames river located?",
+    "source_id": "WebQTrn-208",
+    "original_answer_count": 9,
+    "constraint_description": "is a is 'ceremonial county of England' AND area is less than 3.6K sq km AND population is more than 656.6K AND headquartered in is 'Reigate'",
+    "constraint_logic": "(P31 is 'ceremonial county of England') AND (P2046 < 3577.5455) AND (P1082 > 656604.5) AND (P159 is 'Reigate')",
+    "new_ground_truth": [
+      "Q23276"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which ceremonial county of England with an area of less than 3.6 thousand square kilometers, a population of more than 656.6 thousand, and headquartered in Reigate is the location of the Thames River?"
+  },
+  {
+    "original_question": "where is the thames river located?",
+    "source_id": "WebQTrn-208",
+    "original_answer_count": 9,
+    "constraint_description": "population is less than 1.7M AND area is more than 1.6K sq km AND is a is 'ceremonial county of England' AND headquartered in is 'Reigate'",
+    "constraint_logic": "(P1082 < 1655591.0) AND (P2046 > 1615.87715) AND (P31 is 'ceremonial county of England') AND (P159 is 'Reigate')",
+    "new_ground_truth": [
+      "Q23276"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which ceremonial county of England with its headquarters in Reigate has a population of less than 1.7 million and an area of more than 1.6 thousand square kilometers?"
+  }
+]
