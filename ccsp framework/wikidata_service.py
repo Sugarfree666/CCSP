@@ -194,31 +194,26 @@ class WikidataKG:
 
         return relations
 
-
+    # [请替换 wikidata_service.py 中的 construct_sparql_from_got 方法]
     def construct_sparql_from_got(self, anchors, filters):
         """
         根据 GoT 的节点构建 SPARQL。
-        修改点：
-        1. 增加 ?itemDescription
-        2. 变量名标准化为 ?v_0, ?v_1... 以便 main.py 回溯语义
+        修复：增强了日期字符串 ("1974") 的处理逻辑，防止生成非法 XSD 日期。
         """
-        # --- [修改点 1] 增加 itemDescription ---
-        select_vars = ["?item", "?itemLabel", "?itemDescription"]
+        select_vars = ["?item", "?itemLabel"]
         where_clauses = []
 
+        # 自动添加标准前缀，防止部分环境报错
         prefixes = """
         PREFIX wd: <http://www.wikidata.org/entity/>
         PREFIX wdt: <http://www.wikidata.org/prop/direct/>
         PREFIX wikibase: <http://wikiba.se/ontology#>
         PREFIX bd: <http://www.bigdata.com/rdf#>
-        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         """
 
-        # 确保 Service 能拉取 description
         where_clauses.append('SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }')
 
-        # 1. 处理 Anchors (保持不变)
+        # 1. 处理 Anchors
         for anchor in anchors:
             if 'qid' in anchor:
                 prop = anchor.get('pid') or anchor.get('key')
@@ -229,7 +224,7 @@ class WikidataKG:
                     else:
                         where_clauses.append(f"wd:{anchor['qid']} wdt:{prop} ?item .")
 
-        # 2. 处理 Filters (核心修改)
+        # 2. 处理 Filters
         for i, flt in enumerate(filters):
             prop = flt.get('pid') or flt.get('key')
             val = flt.get('value')
@@ -239,44 +234,52 @@ class WikidataKG:
             if not prop or not prop.startswith('P'):
                 continue
 
-            # --- [修改点 2] 变量名强制使用索引格式 v_0, v_1 ---
-            # 这样我们在解析结果时，就知道 v_0 对应 filters[0]
-            var_name = f"?v_{i}"
+            # 变量名清洗
+            safe_key = "".join(x for x in flt.get('original_key', 'var') if x.isalnum())
+            var_name = f"?{safe_key}_{i}"
             select_vars.append(var_name)
 
-            # 分支 A: 精确 QID (例如 Genre == Horror)
+            # 分支 A: 精确 QID
             if val_qid and val_qid.startswith('Q'):
                 where_clauses.append(f"?item wdt:{prop} wd:{val_qid} .")
-                # 如果是实体匹配，我们通常不需要把 QID 选出来，但为了证据显示，我们可以选 Label
-                # 这里我们稍微变通一下：把具体的实体值赋给 var_name 没意义（因为已经在WHERE里定死了），
-                # 但我们可以提取这个属性的实际值用于展示（其实就是 val_qid）
-                # 为了保持统一，这里不做额外操作，只依赖 filter 逻辑
+                label_var = f"{var_name}_Label"
+                where_clauses.append(
+                    f"OPTIONAL {{ wd:{val_qid} rdfs:label {label_var} . FILTER(LANG({label_var}) = 'en') }}")
+                select_vars.append(label_var)
                 continue
 
             # 分支 B: 数值与字符串
             where_clauses.append(f"?item wdt:{prop} {var_name} .")
 
-            # --- 日期与数值处理 (保持你的原有逻辑，只是把变量名换成了 var_name) ---
+            # --- [核心修复] 日期与数值处理 ---
             is_numeric_op = op in ['>', '<', '>=', '<=']
-            is_date_prop = any(k in str(prop).lower() or k in str(flt).lower() for k in
-                               ["date", "time", "born", "died", "publication"])
+            is_date_prop = any(
+                k in str(prop).lower() or k in str(flt).lower() for k in ["date", "time", "born", "died"])
 
             if is_numeric_op or is_date_prop:
+                # 尝试将 value 规范化为日期字符串
                 date_str = None
+
+                # 情况1: 纯数字 (int/float)
                 if isinstance(val, (int, float)):
-                    if val < 3000:
+                    if val < 3000:  # 认为是年份
                         date_str = f"{int(val)}-01-01T00:00:00Z"
                     else:
+                        # 可能是数值比较 (如票房)
                         where_clauses.append(f"FILTER({var_name} {op} {val})")
+
+                # 情况2: 字符串 (可能是 "1974" 或 "1974-05-01")
                 elif isinstance(val, str):
                     val = val.strip()
+                    # 如果是 4位数字年份 "1974"
                     if val.isdigit() and len(val) == 4:
                         date_str = f"{val}-01-01T00:00:00Z"
-                    elif "T" in val:
+                    elif "T" in val:  # 已经是 ISO 格式
                         date_str = val
-                    else:
+                    else:  # 尝试补全
                         date_str = f"{val}T00:00:00Z"
 
+                # 如果判定为日期，生成 FILTER
                 if date_str:
                     where_clauses.append(f"FILTER({var_name} {op} '{date_str}'^^xsd:dateTime)")
 

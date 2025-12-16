@@ -356,47 +356,25 @@ class GoTEngine:
 
         # 执行查询
         results = self.kg.execute_query(sparql_query)
-
-        final_entities = self._parse_results(results, aligned_filters)
+        final_entities = self._parse_results(results)
         print(f"  => Found {len(final_entities)} results.")
-
-        if not final_entities:
-            print("No results found matching all constraints.")
-            return
-
-        system_prompt_final = """
-                You are a Data-Driven Assistant.
-                I will provide a list of candidate entities retrieved from a Knowledge Graph.
-
-                Each candidate contains:
-                1. "name": The entity name.
-                2. "description": What this entity is.
-                3. "verified_facts": The exact data points from the database that prove this entity satisfies the user's constraints.
-
-                YOUR TASK:
-                - Answer the User Question based strictly on the provided Candidates.
-                - Cite the "verified_facts" to explain WHY the answer is correct. 
-                - Do not hallucinate external information.
-                """
 
         # 生成最终答案
         ans = self.llm.chat(
-            system_prompt_final,
-            f"User Question: {question}\n\nRetrieved Candidates:\n{json.dumps(final_entities, ensure_ascii=False, indent=2)}\n\nAnswer:",
+            "You are a helpful assistant. Answer based on the Data provided.",
+            f"Question: {question}\nData: {json.dumps(final_entities)}\nAnswer:",
             json_mode=False
         )
         print(f"\n[Final Answer]: {ans}")
 
-
-    def _parse_results(self, raw_results, filters_config):
+    def _parse_results(self, raw_results):
         """
-        解析 SPARQL 结果。
-        关键修改：传入 filters_config，将 SPARQL 的 ?v_i 变量映射回原始的约束条件。
+        将 SPARQL 返回结果解析为字典，包含所有“证据变量”。
         """
         parsed = []
         for row in raw_results:
             entity = {}
-            evidence_sentences = []
+            evidence = {}
 
             # 1. 提取核心 Item 信息
             if 'item' in row:
@@ -405,47 +383,20 @@ class GoTEngine:
             if 'itemLabel' in row:
                 entity['name'] = row['itemLabel']['value']
 
-            # [新增] 提取描述信息
-            if 'itemDescription' in row:
-                entity['description'] = row['itemDescription']['value']
+            # 2. 提取证据 (Evidence)
+            # 遍历所有返回的字段，排除掉核心字段，剩下的就是我们 SELECT 出来的证据
+            for key, val in row.items():
+                if key not in ['item', 'itemLabel', 'itemDescription']:
+                    # 清理一下 key 的名字，比如 ?release_date_0 -> release_date
+                    # 去掉末尾的 _0, _1 索引，让 LLM 读起来更舒服
+                    readable_key = key.rsplit('_', 1)[0] if '_' in key else key
+                    evidence[readable_key] = val['value']
 
-            # 2. 提取并“翻译”证据
-            # 我们遍历 filters_config，看每一条约束在这个结果里对应的值是多少
-            for i, constraint in enumerate(filters_config):
-                var_key = f"v_{i}"  # 对应 construct_sparql_from_got 里的 ?v_0, ?v_1...
-
-                # 如果这个变量在结果里存在 (SPARQL返回了值)
-                if var_key in row:
-                    actual_value = row[var_key]['value']
-
-                    # 获取原始约束的语义
-                    # constraint 里的 key 可能是 P577，我们需要它的原始含义或者 PID
-                    attr_name = constraint.get('original_key') or constraint.get('key')
-                    op = constraint.get('op', '==')
-                    target_val = constraint.get('value')
-
-                    # 构造人类可读的证据句
-                    # 例如: "publication date: 2024-01-29 (Matches constraint: > 2023)"
-                    sentence = f"{attr_name}: '{actual_value}' (Satisfies: {op} {target_val})"
-
-                    # 额外处理：如果是模糊匹配生成的 Label
-                    label_key = f"{var_key}_Label"
-                    if label_key in row:
-                        label_val = row[label_key]['value']
-                        sentence = f"{attr_name}: '{label_val}' (Satisfies: contains '{target_val}')"
-
-                    evidence_sentences.append(sentence)
-
-            # 将证据列表合并成一个字符串字段，供 LLM 阅读
-            if evidence_sentences:
-                entity['verified_facts'] = " | ".join(evidence_sentences)
-            else:
-                entity['verified_facts'] = "Target entity found (Exact match)."
+            if evidence:
+                entity['evidence_chain'] = evidence
 
             parsed.append(entity)
-
-        # 打印出来看看效果
-        # print(f"Parsed Entities: {json.dumps(parsed, indent=2, ensure_ascii=False)}")
+        print(parsed)
         return parsed
 
     # -------- 核心变换逻辑：生成思维 --------
