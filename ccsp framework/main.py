@@ -92,6 +92,52 @@ class LLMService:
             return "hard"
         return "soft"
 
+    # 在 LLMService 类中添加
+    def select_best_path(self, question: str, anchor_text: str, candidates: List[Dict]) -> Dict:
+        """
+        从 KG 返回的真实关系列表中，选择最符合问题的一条。
+        """
+        # 构造选项列表字符串
+        # 格式: [P50] author (direction: reverse)
+        options_str = ""
+        for item in candidates:
+            dir_str = "Answer -> Anchor" if item['direction'] == "reverse" else "Anchor -> Answer"
+            options_str += f"- ID: {item['pid']} | Label: {item['label']} | Flow: {dir_str}\n"
+
+        system_prompt = """
+        You are a Path Selection Expert for Knowledge Graphs.
+        Your task: Select the SINGLE best relation ID that connects the Anchor Entity to the Target Answer intended by the User Question.
+
+        Example 1:
+        Question: "Books by Beverly Cleary?" (Anchor: Beverly Cleary)
+        Candidates include: "author (P50, Answer->Anchor)", "birth place (P19, Anchor->Answer)"
+        Choice: {"pid": "P50", "direction": "reverse"} (Because books point TO the author)
+
+        Example 2:
+        Question: "Capital of France?" (Anchor: France)
+        Candidates include: "capital (P36, Anchor->Answer)", "continent (P30, Anchor->Answer)"
+        Choice: {"pid": "P36", "direction": "forward"}
+
+        Return JSON: {"pid": "Pxxx", "direction": "forward/reverse"}
+        """
+
+        user_prompt = f"""
+        User Question: "{question}"
+        Anchor Entity: "{anchor_text}"
+
+        Candidate Relations from KG:
+        {options_str}
+
+        Which relation leads to the answer?
+        """
+
+        try:
+            res = self.chat(system_prompt, user_prompt)
+            return json.loads(res)
+        except:
+            # 保底策略：如果 LLM 选不出来，根据经验返回一个常见的
+            return {"pid": "P50", "direction": "reverse"}
+
 
     def query_anchor(self, key: str, value: Any, op: str = "==") -> Set[str]:
         """
@@ -182,105 +228,160 @@ class GoTEngine:
         self.kg = WikidataKG()
         self.root = None
 
+    # [在 main.py 的 GoTEngine 类中替换 run 方法]
     def run(self, complex_question_data: Dict):
         question = complex_question_data['complex_question']
         print(f"\n{'=' * 60}\nUser Query: {question}\n{'=' * 60}")
 
-        # =================================================================
-        # Layer 0: Root Thought
-        # =================================================================
         self.root = ThoughtNode("root", {"text": question})
 
         # =================================================================
-        # Layer 1: Decomposition (生成思维)
-        # 动作：将 Root 分解为 Anchor 和 Raw Filter
+        # [Layer 1] Decomposition
         # =================================================================
         print("\n[Layer 1] Decomposition (Generating Sub-thoughts)...")
         sub_constraints = self.llm.decompose_query(question)
 
-        anchor_nodes = []
-        raw_filter_nodes = []
+        # 提取数据
+        anchor_data = next((item for item in sub_constraints if item['role'] == 'anchor'), None)
+        raw_filters = [item for item in sub_constraints if item['role'] != 'anchor']
 
-        for item in sub_constraints:
-            # 区分 Anchor 和 Filter
-            if item.get('role') == 'anchor':
-                # Anchor 需要先实例化（Entity Linking），这是 Anchor 思维的“具体化”
-                qid = self.kg.search_entity_id(item['value'])
-                if qid:
-                    item['qid'] = qid
-                    node = ThoughtNode("anchor", item, parents=[self.root])
-                    anchor_nodes.append(node)
-                    print(f"  -> Generated Anchor Node: {item['value']} ({qid})")
-            else:
-                # Filter 暂时还是自然语言，属于 Raw Filter Node
-                node = ThoughtNode("filter_raw", item, parents=[self.root])
-                raw_filter_nodes.append(node)
-                print(f"  -> Generated Raw Filter Node: {item['key']} {item['op']} {item['value']}")
-
-        if not anchor_nodes:
-            print("Error: No valid anchors to ground the graph.")
+        if not anchor_data:
+            print("Error: No valid anchors found.")
             return
 
-        # =================================================================
-        # Context Retrieval (环境交互)
-        # 注意：这不是思维节点，而是为了支持下一步“生成思维”所做的环境探索
-        # =================================================================
-        print("\n[Context] Exploring KG Environment for Schema...")
-        # 取第一个 Anchor 作为探索的立足点
-        context_anchor = anchor_nodes[0]
-        # 1. 采样: 找一个实例
-        sample_instance = self._get_sample_instance(context_anchor.content)
-        # 2. 探查: 获取候选属性列表
-        schema_context = self._fetch_available_properties(sample_instance) if sample_instance else {}
-        print(f"  -> Retrieved {len(schema_context)} schema candidates as context.")
+        # 1. Anchor Entity Linking
+        # 尝试将 Anchor 文本 (Beverly Cleary) 转为 QID
+        anchor_qid = self.kg.search_entity_id(anchor_data['value'])
+        if not anchor_qid:
+            print("Error: Anchor linking failed.")
+            return
+
+        print(f"  -> Anchor Linked: {anchor_data['value']} ({anchor_qid})")
+
+        # 对 Filter 的 Value 进行 Refinement (Entity Linking)
+        # 这一步是为了解决 "novel series" -> Qxxxx 的问题
+        for item in raw_filters:
+            if isinstance(item['value'], str) and item['op'] in ['contains', '==', 'is']:
+                # 排除纯数字字符串
+                if not item['value'].isdigit():
+                    print(f"  [Refinement] Linking filter value: '{item['value']}'...")
+                    qid = self.kg.search_entity_id(item['value'])
+                    if qid:
+                        print(f"    -> Success: {qid}")
+                        item['value_qid'] = qid
+                        item['type'] = 'entity'
 
         # =================================================================
-        # Layer 2: Alignment (生成思维变换)
-        # 思想：Input(Raw Filter + Schema Context) -> Generate -> Output(Aligned Filter)
+        # [Layer 1.5] Topology-Aware Path Finding (拓扑感知路径发现)
         # =================================================================
-        print("\n[Layer 2] Alignment (Generating Aligned Thoughts)...")
+        print("\n[Layer 1.5] Path Finding (Probing KG Topology)...")
+
+        # 1. Discover: 从 KG 获取 Anchor 周围的真实关系
+        candidate_relations = self.kg.get_candidate_relations(anchor_qid)
+        print(f"  -> Found {len(candidate_relations)} connections around {anchor_data['value']}.")
+
+        if not candidate_relations:
+            print("  [Error] Isolated node in KG.")
+            return
+
+        # 2. Select: 让 LLM 从真实候选项里挑一个
+        selected_path = self.llm.select_best_path(question, anchor_data['value'], candidate_relations)
+        rel_pid = selected_path.get('pid')
+        rel_dir = selected_path.get('direction')
+        print(f"  -> Path Selected: {rel_pid} ({rel_dir})")
+
+        # 3. Sample: 根据选定的方向进行采样，获取一个 Target Instance
+        if rel_dir == 'reverse':
+            # Answer -> Anchor (e.g., Book -> Author)
+            sample_query = f"SELECT ?item WHERE {{ ?item wdt:{rel_pid} wd:{anchor_qid} }} LIMIT 1"
+        else:
+            # Anchor -> Answer (e.g., Country -> Capital)
+            sample_query = f"SELECT ?item WHERE {{ wd:{anchor_qid} wdt:{rel_pid} ?item }} LIMIT 1"
+
+        sample_results = self.kg.execute_query(sample_query)
+        sample_qid = None
+
+        if sample_results:
+            sample_uri = sample_results[0]['item']['value']
+            # 确保是实体而不是数值
+            if "entity" in sample_uri:
+                sample_qid = sample_uri.split('/')[-1]
+                print(f"  -> Sampling Success: Found sample instance {sample_qid}")
+            else:
+                print("  [Info] Target is a literal value (e.g., date/number), skipping schema learning.")
+        else:
+            print("  [Warning] Sampling returned no results. Schema learning might be limited.")
+
+        # =================================================================
+        # [Layer 2] Alignment (基于 Sample Schema 对齐 Filter)
+        # =================================================================
+        print("\n[Layer 2] Alignment (Mapping Filters to Sample Schema)...")
+
+        # 1. 获取 Sample 的属性列表 (Context)
+        schema_context = self._fetch_available_properties(sample_qid) if sample_qid else {}
+        print(f"  -> Learned {len(schema_context)} properties from sample.")
+
         aligned_filter_nodes = []
+        for raw_item in raw_filters:
+            # 传入 Context 进行对齐 (例如 genre -> P136)
+            aligned_content = self._generate_aligned_thought(raw_item, schema_context)
 
-        for raw_node in raw_filter_nodes:
-            # 对每一个 Raw Filter 进行“生成变换”
-            aligned_content = self._generate_aligned_thought(raw_node.content, schema_context)
+            # 创建节点
+            node = ThoughtNode("filter_aligned", aligned_content, parents=[self.root])
+            aligned_filter_nodes.append(node)
 
-            # 创建新的思维节点
-            aligned_node = ThoughtNode("filter_aligned", aligned_content, parents=[raw_node])
-            aligned_filter_nodes.append(aligned_node)
-
-            print(
-                f"  -> Transformation: '{raw_node.content['key']}' => '{aligned_content['key']}' ({aligned_content['pid']})")
+            val_disp = aligned_content.get('value_qid') or aligned_content.get('value')
+            print(f"  -> Filter: '{raw_item['key']}' => '{aligned_content['pid']}' (Value: {val_disp})")
 
         # =================================================================
-        # Layer 3: Aggregation (聚合思维)
-        # 动作：将 Anchor Nodes 和 Aligned Filter Nodes 聚合为一个 Action
+        # [Layer 3] Aggregation (构建并执行最终查询)
         # =================================================================
         print("\n[Layer 3] Aggregation (Constructing SPARQL)...")
 
-        # 收集所有需要聚合的信息
-        final_anchors = [n.content for n in anchor_nodes]
-        final_filters = [n.content for n in aligned_filter_nodes]  # 使用 Layer 2 的结果
+        # 构造 Final Anchors
+        # 这里的关键是把 Layer 1.5 选出来的路径 (PID 和 Direction) 放进去
+        final_anchors = [{
+            'qid': anchor_qid,
+            'pid': rel_pid,
+            'direction': rel_dir,
+            'role': 'anchor'
+        }]
 
-        # 聚合生成 SPARQL
+        final_filters = [n.content for n in aligned_filter_nodes]
+
+        # 调用 wikidata_service 中的构建函数
         sparql_query = self.kg.construct_sparql_from_got(final_anchors, final_filters)
         print(f"  [Aggregated Query]:\n{sparql_query}")
 
-        # =================================================================
-        # Execution & Result
-        # =================================================================
+        # 执行查询
         results = self.kg.execute_query(sparql_query)
         final_entities = self._parse_results(results)
         print(f"  => Found {len(final_entities)} results.")
 
-        # ... (Refine 逻辑同理，也是一种基于反馈的生成变换，此处省略以保持简洁) ...
-
-        # Final Answer Generation
+        # 生成最终答案
         ans = self.llm.chat(
             "You are a helpful assistant.",
             f"Question: {question}\nData: {json.dumps(final_entities)}\nAnswer:"
         )
         print(f"\n[Final Answer]: {ans}")
+
+    # 在 GoTEngine 类中添加这个方法
+    def _parse_results(self, raw_results):
+        """
+        将 SPARQL 返回的复杂 JSON 格式解析为简单的字典列表
+        """
+        parsed = []
+        for row in raw_results:
+            entity = {}
+            # 提取 ?item (URI)
+            if 'item' in row:
+                entity['uri'] = row['item']['value']
+                entity['id'] = entity['uri'].split('/')[-1]  # QID
+            # 提取 ?itemLabel
+            if 'itemLabel' in row:
+                entity['name'] = row['itemLabel']['value']
+            parsed.append(entity)
+        return parsed
 
     # -------- 核心变换逻辑：生成思维 --------
 
@@ -337,25 +438,40 @@ class GoTEngine:
             return res[0]['item']['value'].split('/')[-1]
         return None
 
-    def _fetch_available_properties(self, qid):
+    # [在 main.py 的 GoTEngine 类中替换此方法]
+    def _fetch_available_properties(self, sample_qid):
         """
-        helper: 获取某个实体的所有属性和对应的 Label
-        返回: {'P577': 'publication date', 'P2047': 'duration', ...}
+        获取样本实体的所有属性，以及该属性对应的值的Label（用于帮助理解语义）。
         """
-        # 这个 SPARQL 查询该实体拥有的所有属性及其 Label
+        if not sample_qid: return {}
+
+        # 这里的查询稍微复杂一点，为了获取 Example Value，帮助 LLM 理解属性含义
         query = f"""
-        SELECT DISTINCT ?p ?propLabel WHERE {{
-          wd:{qid} ?p ?o .
+        SELECT DISTINCT ?p ?pLabel ?valLabel WHERE {{
+          wd:{sample_qid} ?p ?val .
           ?prop wikibase:directClaim ?p .
           SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
-        }} LIMIT 100
+          # 获取属性的 Label
+          ?prop rdfs:label ?pLabel .
+          FILTER(LANG(?pLabel) = "en")
+
+          # 顺便获取一下值的 Label (只取 Entity 类型的 label)
+          OPTIONAL {{ ?val rdfs:label ?valLabel . FILTER(LANG(?valLabel) = "en") }}
+        }} LIMIT 50
         """
         res = self.kg.execute_query(query)
         schema = {}
         for r in res:
             pid = r['p']['value'].split('/')[-1]
-            label = r.get('propLabel', {}).get('value', '')
-            schema[pid] = label
+            p_label = r.get('pLabel', {}).get('value', 'Unknown')
+            val_example = r.get('valLabel', {}).get('value', '')
+
+            # 存储格式：P136 -> "genre (e.g., Children's fiction)"
+            if pid not in schema:
+                desc = f"{p_label}"
+                if val_example:
+                    desc += f" (e.g., {val_example})"
+                schema[pid] = desc
         return schema
 
     def _map_filters_with_schema(self, raw_filters, schema_map):
@@ -439,11 +555,10 @@ if __name__ == "__main__":
 
         # 5. 循环处理
         # 你可以使用 dataset[:5] 来先测试前5条，跑通后再去掉切片跑全量
-        for i, item in enumerate(dataset[:2]):
+        for i, item in enumerate(dataset[:1]):
             print(f"\n{'#' * 60}")
             print(f"进度: {i + 1}/{len(dataset)}")
             print(f"{'#' * 60}")
-
             try:
                 # 调用引擎处理单条数据
                 engine.run(item)

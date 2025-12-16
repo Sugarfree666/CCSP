@@ -81,8 +81,11 @@ class WikidataKG:
         """
         Entity Linking: 将自然语言实体名 (如 'Taylor Lautner') 转为 QID (如 'Q143716')
         """
-        # 1. 简单缓存检查 (你也可以把这个存进 cache_file 里，这里为了演示简单处理)
-        # 注意：为了更稳健，你可以像 execute_query 一样实现一个基于文件的缓存
+        # 1. 缓存检查
+        cache_key = f"ENTITY:{label}"
+        if cache_key in self.cache:
+            print(f"    [Cache Hit] 实体 '{label}' -> {self.cache[cache_key]}")
+            return self.cache[cache_key]
 
         url = "https://www.wikidata.org/w/api.php"
         params = {
@@ -92,65 +95,189 @@ class WikidataKG:
             "search": label,
             "limit": 1
         }
+
+        # --- [修改点] 定义 Headers，必须包含 User-Agent ---
+        headers = {
+            "User-Agent": "CCSP-Research-Bot/1.0 (uniqueyqlf@gmail.com)"  # 使用和你 __init__ 中一样的邮箱
+        }
+
         try:
-            # 这里也可以加重试机制
-            response = requests.get(url, params=params)
+            # --- [修改点] 请求时带上 headers ---
+            response = requests.get(url, params=params, headers=headers)
+
+            # 调试：如果状态码不是 200，抛出异常
+            response.raise_for_status()
+
             data = response.json()
             if data.get("search"):
                 qid = data["search"][0]["id"]
                 print(f"    [Link Success] '{label}' -> {qid}")
+
+                # 存缓存
+                self.cache[cache_key] = qid
+                self._save_cache()
                 return qid
+            else:
+                print(f"    [Link Failed] Wikidata 中找不到: {label}")
+
         except Exception as e:
-            print(f"    [Link Error] Search failed for {label}: {e}")
+            # 打印更详细的错误信息
+            print(f"    [Link Error] Search failed for '{label}': {e}")
+            # 如果是解析错误，打印一下返回的内容到底是啥（通常是 Access Denied 的 HTML）
+            if "Expecting value" in str(e) and 'response' in locals():
+                print(f"    [Debug] Server response: {response.text[:200]}...")  # 只打印前200个字符
+
         return None
+
+        # 在 WikidataKG 类中添加此方法
+    def get_candidate_relations(self, qid):
+        """
+        [通用方法] 获取与 Anchor 相连的所有属性（Top 50），包括正向和反向。
+        用于让 LLM 从中选择正确的路径，而不是盲猜。
+        """
+        # 1. 反向关系 (Reverse): ?target ?p wd:Anchor (例如 ?book wdt:P50 wd:Author)
+        # 这对于 "Books by...", "Movies starring..." 非常常见
+        query_reverse = f"""
+        SELECT DISTINCT ?p ?pLabel WHERE {{
+          ?s ?p wd:{qid} .
+          ?prop wikibase:directClaim ?p .
+          SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+          ?prop rdfs:label ?pLabel .
+          FILTER(LANG(?pLabel) = "en")
+        }} LIMIT 30
+        """
+
+        # 2. 正向关系 (Forward): wd:Anchor ?p ?target (例如 wd:Country wdt:P31 ?)
+        # 这对于 "What is the capital of..." 非常常见
+        query_forward = f"""
+        SELECT DISTINCT ?p ?pLabel WHERE {{
+          wd:{qid} ?p ?o .
+          ?prop wikibase:directClaim ?p .
+          SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+          ?prop rdfs:label ?pLabel .
+          FILTER(LANG(?pLabel) = "en")
+        }} LIMIT 30
+        """
+
+        relations = []
+
+        # 执行查询并标记方向
+        try:
+            res_rev = self.execute_query(query_reverse)
+            for r in res_rev:
+                relations.append({
+                    "pid": r['p']['value'].split('/')[-1],
+                    "label": r.get('pLabel', {}).get('value', 'Unknown'),
+                    "direction": "reverse"  # 意味着答案在 ?s 位置
+                })
+
+            res_fwd = self.execute_query(query_forward)
+            for r in res_fwd:
+                relations.append({
+                    "pid": r['p']['value'].split('/')[-1],
+                    "label": r.get('pLabel', {}).get('value', 'Unknown'),
+                    "direction": "forward"  # 意味着答案在 ?o 位置
+                })
+        except Exception as e:
+            print(f"Error fetching candidate relations: {e}")
+
+        return relations
+
 
     def construct_sparql_from_got(self, anchors, filters):
         """
-        将聚合后的 Anchor 和 Filter 转换为 SPARQL 查询
+        根据 GoT 的节点构建 SPARQL。
+        修改点：增加了对 filter 中 value_qid 的支持，实现了精确的实体匹配。
         """
         sparql = """
         SELECT DISTINCT ?item ?itemLabel WHERE {
           SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }
         """
 
-        # 1. 处理 Anchors (实体约束)
+        # ==========================================
+        # 1. 处理 Anchors (起点实体)
+        # ==========================================
+        # 1. 处理 Anchors (支持方向)
         for anchor in anchors:
-            # anchor 结构预期: {'qid': 'Q143716', 'key': 'P161', ...}
-            # 如果 main.py 里已经解析了 qid，直接用
             if 'qid' in anchor:
-                # 这里的 key 应该是 PID (如 P161 starring)
-                prop = anchor.get('key')
-                # 如果 key 不是 PID (比如是 'starring')，需要 LLM 之前做过映射，或者在这里做容错
-                # 假设已经是 PID
-                if prop.startswith('P'):
-                    sparql += f"  ?item wdt:{prop} wd:{anchor['qid']} .\n"
-            else:
-                # 备用：如果没有 qid，尝试现场搜 (不推荐，效率低)
-                pass
+                prop = anchor.get('pid') or anchor.get('key')
+                if prop and prop.startswith('P'):
+                    # 核心修改：判断方向
+                    direction = anchor.get('direction', 'reverse')  # 默认为 reverse (常见于 book by author)
 
-        # 2. 处理 Filters (数值/属性约束)
-        # filters 结构预期: [{'pid': 'P2047', 'op': '<', 'value': 122.5}, ...]
+                    if direction == 'reverse':
+                        # Answer(item) -> Anchor
+                        sparql += f"  ?item wdt:{prop} wd:{anchor['qid']} .\n"
+                    else:
+                        # Anchor -> Answer(item)
+                        # 注意：这种情况下，?item 是 Anchor 的属性值
+                        # 但通常我们的 Filter 是加在 Answer 上的。
+                        # 如果问题是 "Countries where Portuguese is spoken" (Anchor: Portuguese)
+                        # 关系可能是: ?country wdt:P2936 wd:Portuguese. (这依然是 Reverse)
+
+                        # 如果问题是 "Capital of France" (Anchor: France)
+                        # 关系: wd:France wdt:P36 ?item. (这是 Forward)
+                        sparql += f"  wd:{anchor['qid']} wdt:{prop} ?item .\n"
+
+        # ==========================================
+        # 2. 处理 Filters (约束条件)
+        # ==========================================
         for i, flt in enumerate(filters):
-            # 使用 PID (Layer 2 对齐后的结果)
             prop = flt.get('pid') or flt.get('key')
-            op = flt.get('op', '=')
             val = flt.get('value')
+            op = flt.get('op', '==')
 
+            # [新增] 获取上游可能传入的 value_qid (例如 "children's fiction" -> "Q131539")
+            val_qid = flt.get('value_qid')
+
+            # 如果没有有效的属性 ID (Pxxx)，跳过该约束
             if not prop or not prop.startswith('P'):
                 continue
 
             var_name = f"?v_{i}"
+
+            # --- 分支 A: 精确实体匹配 (新增的核心逻辑) ---
+            # 如果我们知道 Value 对应的 QID，直接使用对象属性匹配，不再依赖字符串
+            if val_qid and val_qid.startswith('Q'):
+                sparql += f"  ?item wdt:{prop} wd:{val_qid} .\n"
+                continue  # 处理完这个 filter，直接进入下一次循环
+
+            # --- 分支 B: 数值与日期范围查询 ---
+            # 如果没有 QID，先声明变量
             sparql += f"  ?item wdt:{prop} {var_name} .\n"
 
-            # 数值/时间过滤
-            # 简单的类型判断逻辑
-            if isinstance(val, str) and ("-" in val or "date" in prop.lower()):
-                sparql += f"  FILTER({var_name} {op} '{val}T00:00:00Z'^^xsd:dateTime)\n"
+            # 处理特殊字符，防止注入
+            safe_val = str(val).replace("'", "\\'") if isinstance(val, str) else val
+
+            # 判断是否为日期或数值比较
+            is_numeric_op = op in ['>', '<', '>=', '<=']
+            is_date_prop = "date" in str(prop).lower() or "time" in str(prop).lower() or "born" in str(
+                flt.get('content', '')).lower()
+
+            if is_numeric_op or is_date_prop:
+                if isinstance(val, int) and val < 3000:  # 简单的年份判断
+                    # 处理年份简写，如 2009 -> 2009-01-01
+                    date_str = f"{val}-01-01T00:00:00Z"
+                    sparql += f"  FILTER({var_name} {op} '{date_str}'^^xsd:dateTime)\n"
+                elif isinstance(val, (int, float)):
+                    # 普通数值
+                    sparql += f"  FILTER({var_name} {op} {val})\n"
+                else:
+                    # 尝试处理字符串格式的日期
+                    date_val = str(val) if "T" in str(val) else f"{val}T00:00:00Z"
+                    sparql += f"  FILTER({var_name} {op} '{date_val}'^^xsd:dateTime)\n"
+
+            # --- 分支 C: 字符串模糊匹配 (保底逻辑) ---
             else:
-                sparql += f"  FILTER({var_name} {op} {val})\n"
+                # 只有当它是字符串时才进行 Label 匹配
+                if isinstance(val, str):
+                    var_label = f"?v_{i}Label"
+                    # 获取 Label
+                    sparql += f"  {var_name} rdfs:label {var_label} .\n"
+                    # 限制为英文，提高查询速度
+                    sparql += f"  FILTER(LANG({var_label}) = 'en')\n"
+                    # 使用小写包含匹配
+                    sparql += f'  FILTER(CONTAINS(LCASE({var_label}), LCASE("{safe_val}")))\n'
 
         sparql += "} LIMIT 20"
         return sparql
-
-    # search_entity_id 也可以加上类似的缓存逻辑
-    # ...
