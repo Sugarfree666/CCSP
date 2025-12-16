@@ -1,4 +1,42 @@
 [
+    {
+    "original_question": "what movies did diana ross play in?",
+    "source_id": "WebQTrn-203",
+    "original_answer_count": 6,
+    "constraint_description": "is a is 'film' AND released date after 1974 AND genre is 'documentary film' AND directed by is 'Bao Nguyen'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 1974.25) AND (P136 is 'documentary film') AND (P57 is 'Bao Nguyen')",
+    "new_ground_truth": [
+      "Q124165657"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Diana Ross, directed by Bao Nguyen, is a documentary released after 1974?"
+  },
+  {
+    "original_question": "what did shawnee smith play in?",
+    "source_id": "WebQTrn-115",
+    "original_answer_count": 32,
+    "constraint_description": "is a is 'film' AND released date after 1995 AND duration is less than 109.50 min AND genre is 'horror film' AND directed by is 'Kevin Greutert' AND starring is 'Chester Bennington'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 1995.0) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P57 is 'Kevin Greutert') AND (P161 is 'Chester Bennington')",
+    "new_ground_truth": [
+      "Q676284"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
+  },
+
+    {
+    "original_question": "what movies does taylor lautner play in?",
+    "source_id": "WebQTrn-25",
+    "original_answer_count": 15,
+    "constraint_description": "starring is 'Taylor Lautner' AND released date after 2009 AND duration is less than 122.50 min AND box office is less than $711.9M",
+    "constraint_logic": "(P161 is 'Taylor Lautner') AND (P577 > 2009.0) AND (P2047 < 122.5) AND (P2142 < 711909412.25)",
+    "new_ground_truth": [
+      "Q143716"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Taylor Lautner was released after 2009, has a runtime shorter than 122.5 minutes, and a box office gross of less than $711.9 million?"
+  },
+
   {
     "original_question": "what books did beverly cleary write?",
     "source_id": "WebQTrn-18",
@@ -58,18 +96,6 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which book that is a literary work, released after 1956, and that received the Vermont Golden Dome Book Award did Beverly Cleary write?"
-  },
-  {
-    "original_question": "what movies does taylor lautner play in?",
-    "source_id": "WebQTrn-25",
-    "original_answer_count": 15,
-    "constraint_description": "starring is 'Taylor Lautner' AND released date after 2009 AND duration is less than 122.50 min AND box office is less than $711.9M",
-    "constraint_logic": "(P161 is 'Taylor Lautner') AND (P577 > 2009.0) AND (P2047 < 122.5) AND (P2142 < 711909412.25)",
-    "new_ground_truth": [
-      "Q143716"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which movie starring Taylor Lautner was released after 2009, has a runtime shorter than 122.5 minutes, and a box office gross of less than $711.9 million?"
   },
   {
     "original_question": "what movies does taylor lautner play in?",
@@ -418,18 +444,6 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which literary award founded after 1970 in Estonia has Louis Sachar won?"
-  },
-  {
-    "original_question": "what did shawnee smith play in?",
-    "source_id": "WebQTrn-115",
-    "original_answer_count": 32,
-    "constraint_description": "is a is 'film' AND released date after 1995 AND duration is less than 109.50 min AND genre is 'horror film' AND directed by is 'Kevin Greutert' AND starring is 'Chester Bennington'",
-    "constraint_logic": "(P31 is 'film') AND (P577 > 1995.0) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P57 is 'Kevin Greutert') AND (P161 is 'Chester Bennington')",
-    "new_ground_truth": [
-      "Q676284"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
   },
   {
     "original_question": "what did shawnee smith play in?",
@@ -1042,18 +1056,6 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which film starring Stevie Wonder classified as a documentary and released after 1974 features Diana Ross?"
-  },
-  {
-    "original_question": "what movies did diana ross play in?",
-    "source_id": "WebQTrn-203",
-    "original_answer_count": 6,
-    "constraint_description": "is a is 'film' AND released date after 1974 AND genre is 'documentary film' AND directed by is 'Bao Nguyen'",
-    "constraint_logic": "(P31 is 'film') AND (P577 > 1974.25) AND (P136 is 'documentary film') AND (P57 is 'Bao Nguyen')",
-    "new_ground_truth": [
-      "Q124165657"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which film starring Diana Ross, directed by Bao Nguyen, is a documentary released after 1974?"
   },
   {
     "original_question": "who won golden boot?",
