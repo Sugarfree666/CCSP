@@ -93,14 +93,7 @@ class LLMService:
             print("Failed to decode JSON from LLM")
             return []
 
-    def classify_constraint(self, constraint_info: Dict) -> str:
-        """
-        判断约束是硬约束(Hard)还是软约束(Soft)
-        """
-        # 简单逻辑：实体匹配通常是硬约束，数值范围通常是软约束
-        if constraint_info.get("type") == "entity" or constraint_info.get("op") == "==":
-            return "hard"
-        return "soft"
+
 
     # 在 LLMService 类中添加
     def select_best_path(self, question: str, anchor_text: str, candidates: List[Dict]) -> Dict:
@@ -147,71 +140,6 @@ class LLMService:
         except:
             # 保底策略：如果 LLM 选不出来，根据经验返回一个常见的
             return {"pid": "P50", "direction": "reverse"}
-
-
-    def query_anchor(self, key: str, value: Any, op: str = "==") -> Set[str]:
-        """
-        根据 Anchor 条件查找实体 ID
-        """
-        results = set()
-        print(f"    [KG Query] Search {key} {op} {value}...")
-        for item in self.mock_db:
-            item_val = item.get(key)
-            if not item_val: continue
-
-            # 简单的包含/相等匹配
-            if op == "contains" and isinstance(item_val, list):
-                if value in item_val: results.add(item['id'])
-            elif str(item_val) == str(value):
-                results.add(item['id'])
-        return results
-
-    def get_entity_details(self, ids: Set[str]) -> List[Dict]:
-        return [item for item in self.mock_db if item['id'] in ids]
-
-    def check_filter(self, entity_id: str, constraints: List[Dict]) -> bool:
-        """
-        在 Python 端执行复杂的 Filter 逻辑 (>, <, etc.)
-        """
-        entity = next((e for e in self.mock_db if e['id'] == entity_id), None)
-        if not entity: return False
-
-        for c in constraints:
-            key = c['key']
-            target = c['value']
-            op = c['op']
-            actual = entity.get(key)
-
-            if actual is None: return False
-
-            try:
-                if op == ">" and not (float(actual) > float(target)): return False
-                if op == "<" and not (float(actual) < float(target)): return False
-                if op == ">=" and not (float(actual) >= float(target)): return False
-                if op == "<=" and not (float(actual) <= float(target)): return False
-                if op == "==" and str(actual) != str(target): return False
-                if op == "contains" and isinstance(actual, list) and target not in actual: return False
-            except ValueError:
-                continue  # 类型转换失败忽略
-
-        return True
-
-    def find_nearest_value(self, base_ids: Set[str], target_attr: str, threshold: float) -> Optional[float]:
-        """
-        Refine 辅助：在候选集中查找数值属性的分布
-        """
-        values = []
-        for pid in base_ids:
-            entity = next((e for e in self.mock_db if e['id'] == pid), None)
-            if entity and entity.get(target_attr):
-                values.append(entity[target_attr])
-
-        values.sort()
-        # 寻找最接近 threshold 的值
-        # 简单逻辑：返回第一个大于 threshold 的值
-        for v in values:
-            if v > threshold: return v
-        return None
 
 
 # ==========================================
@@ -359,12 +287,45 @@ class GoTEngine:
         final_entities = self._parse_results(results)
         print(f"  => Found {len(final_entities)} results.")
 
+        # [新增] 增强数据：将 Anchors 信息注入到每个结果中
+        # 因为 SPARQL 是 AND 逻辑，所以查出来的结果一定满足所有 Anchor 条件
+        enriched_data = []
+        for entity in final_entities:
+            # 1. 基础信息
+            context_str = f"Entity: {entity.get('name')} ({entity.get('id')})\n"
+            context_str += f"Description: {entity.get('description', 'N/A')}\n"
+
+            # 2. 属性证据 (Filters) - 这里只有日期等
+            context_str += "Matched Attributes:\n"
+            for k, v in entity.get('attributes', {}).items():
+                context_str += f"  - {k}: {v}\n"
+
+            # 3. [关键!] 关系证据 (Anchors) - 强行把 Diana Ross 写进去
+            # 逻辑：既然这个实体是靠搜 Diana Ross 找到的，那它一定和 Diana Ross 有关系
+            context_str += "Verified Relationships (Anchors):\n"
+            for anchor in final_anchors_config:
+                role = anchor.get('name')
+                pid = anchor.get('pid', 'Unknown Relation')
+                context_str += f"  - Connected to: {role} (via {pid})\n"
+
+            enriched_data.append(context_str)
+
+        # 4. 组装最终 Prompt
+        final_context = "\n---\n".join(enriched_data[:5])
+
         # 生成最终答案
-        ans = self.llm.chat(
-            "You are a helpful assistant. Answer based on the Data provided.",
-            f"Question: {question}\nData: {json.dumps(final_entities)}\nAnswer:",
-            json_mode=False
-        )
+        # [修改] 这里的 Prompt 稍微改一下，强调使用提供的 Evidence
+        system_prompt = "You are a Knowledge Graph QA assistant. Synthesize the answer based strictly on the provided Evidence."
+        user_prompt = f"""
+            Question: {question}
+
+            Evidence Retrieved from Knowledge Graph:
+            {final_context}
+
+            Please answer the question. If the evidence contains the answer, state it clearly.
+            """
+
+        ans = self.llm.chat(system_prompt, user_prompt, json_mode=False)
         print(f"\n[Final Answer]: {ans}")
 
     def _parse_results(self, raw_results):
@@ -383,21 +344,28 @@ class GoTEngine:
             if 'itemLabel' in row:
                 entity['name'] = row['itemLabel']['value']
 
-            # 2. 提取证据 (Evidence)
-            # 遍历所有返回的字段，排除掉核心字段，剩下的就是我们 SELECT 出来的证据
+            # [新增] 提取描述信息，非常有助于 LLM 理解这是个电影还是书，还是人
+            if 'itemDescription' in row:
+                entity['description'] = row['itemDescription']['value']
+
+            # 2. 提取 Filter 产生的证据 (Evidence)
             for key, val in row.items():
+                # [修改] 排除列表增加 itemDescription
                 if key not in ['item', 'itemLabel', 'itemDescription']:
-                    # 清理一下 key 的名字，比如 ?release_date_0 -> release_date
-                    # 去掉末尾的 _0, _1 索引，让 LLM 读起来更舒服
                     readable_key = key.rsplit('_', 1)[0] if '_' in key else key
-                    evidence[readable_key] = val['value']
+                    # 如果是日期，截取前10位看起来更干净
+                    val_str = val['value']
+                    if "T00:00:00Z" in val_str:
+                        val_str = val_str.split('T')[0]
+                    evidence[readable_key] = val_str
 
             if evidence:
-                entity['evidence_chain'] = evidence
+                entity['attributes'] = evidence  # 改个名字叫 attributes 更直观
 
             parsed.append(entity)
         print(parsed)
         return parsed
+
 
     # -------- 核心变换逻辑：生成思维 --------
 

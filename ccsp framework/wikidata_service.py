@@ -148,23 +148,23 @@ class WikidataKG:
 
         # 1. 反向关系 (Reverse): 别人连我 (e.g. ?book wdt:P50 wd:Author)
         query_reverse = f"""
-            {prefixes}
-            SELECT DISTINCT ?p ?propLabel WHERE {{
-              ?s ?p wd:{qid} .
-              ?prop wikibase:directClaim ?p .
-              SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
-            }} LIMIT 30
-            """
+                    {prefixes}
+                    SELECT DISTINCT ?p ?propLabel WHERE {{
+                      ?s ?p wd:{qid} .
+                      ?prop wikibase:directClaim ?p .
+                      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+                    }} LIMIT 150
+                    """
 
         # 2. 正向关系 (Forward): 我连别人 (e.g. wd:Country wdt:P36 ?capital)
         query_forward = f"""
-            {prefixes}
-            SELECT DISTINCT ?p ?propLabel WHERE {{
-              wd:{qid} ?p ?o .
-              ?prop wikibase:directClaim ?p .
-              SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
-            }} LIMIT 30
-            """
+                    {prefixes}
+                    SELECT DISTINCT ?p ?propLabel WHERE {{
+                      wd:{qid} ?p ?o .
+                      ?prop wikibase:directClaim ?p .
+                      SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
+                    }} LIMIT 150
+                    """
 
         relations = []
 
@@ -200,7 +200,7 @@ class WikidataKG:
         根据 GoT 的节点构建 SPARQL。
         修复：增强了日期字符串 ("1974") 的处理逻辑，防止生成非法 XSD 日期。
         """
-        select_vars = ["?item", "?itemLabel"]
+        select_vars = ["?item", "?itemLabel", "?itemDescription"]
         where_clauses = []
 
         # 自动添加标准前缀，防止部分环境报错
@@ -251,37 +251,30 @@ class WikidataKG:
             # 分支 B: 数值与字符串
             where_clauses.append(f"?item wdt:{prop} {var_name} .")
 
-            # --- [核心修复] 日期与数值处理 ---
             is_numeric_op = op in ['>', '<', '>=', '<=']
-            is_date_prop = any(
-                k in str(prop).lower() or k in str(flt).lower() for k in ["date", "time", "born", "died"])
+            # 显式判断属性名是否包含日期关键词，或者值本身看起来像日期
+            key_lower = str(prop).lower()
+            is_date_prop = any(k in key_lower for k in ["date", "time", "born", "died", "publication"])
 
-            if is_numeric_op or is_date_prop:
-                # 尝试将 value 规范化为日期字符串
+            # 只有当属性明显是日期，或者值是典型的年份格式(1xxx, 2xxx)时，才转日期
+            is_year_val = isinstance(val, (int, float, str)) and str(val).isdigit() and 1000 <= float(val) <= 2030
+
+            if is_date_prop or (is_year_val and "rating" not in key_lower and "duration" not in key_lower):
+                # 日期处理逻辑
                 date_str = None
-
-                # 情况1: 纯数字 (int/float)
-                if isinstance(val, (int, float)):
-                    if val < 3000:  # 认为是年份
-                        date_str = f"{int(val)}-01-01T00:00:00Z"
-                    else:
-                        # 可能是数值比较 (如票房)
-                        where_clauses.append(f"FILTER({var_name} {op} {val})")
-
-                # 情况2: 字符串 (可能是 "1974" 或 "1974-05-01")
+                if str(val).isdigit():  # 年份
+                    date_str = f"{val}-01-01T00:00:00Z"
+                elif isinstance(val, str) and "T" in val:
+                    date_str = val
                 elif isinstance(val, str):
-                    val = val.strip()
-                    # 如果是 4位数字年份 "1974"
-                    if val.isdigit() and len(val) == 4:
-                        date_str = f"{val}-01-01T00:00:00Z"
-                    elif "T" in val:  # 已经是 ISO 格式
-                        date_str = val
-                    else:  # 尝试补全
-                        date_str = f"{val}T00:00:00Z"
+                    date_str = f"{val}T00:00:00Z"
 
-                # 如果判定为日期，生成 FILTER
                 if date_str:
                     where_clauses.append(f"FILTER({var_name} {op} '{date_str}'^^xsd:dateTime)")
+
+            elif is_numeric_op:
+                # 纯数值处理 (评分、时长等)
+                where_clauses.append(f"FILTER({var_name} {op} {val})")
 
             # 分支 C: 字符串模糊匹配
             elif isinstance(val, str):

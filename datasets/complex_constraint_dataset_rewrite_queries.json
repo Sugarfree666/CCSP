@@ -1,15 +1,51 @@
 [
     {
-    "original_question": "what movies did diana ross play in?",
-    "source_id": "WebQTrn-203",
-    "original_answer_count": 6,
-    "constraint_description": "is a is 'film' AND released date after 1974 AND genre is 'documentary film' AND directed by is 'Bao Nguyen'",
-    "constraint_logic": "(P31 is 'film') AND (P577 > 1974.25) AND (P136 is 'documentary film') AND (P57 is 'Bao Nguyen')",
+    "original_question": "what are the 5 biggest cities in the usa?",
+    "source_id": "WebQTrn-194",
+    "original_answer_count": 5,
+    "constraint_description": "population is less than 4.4M AND founded in before 1792 AND area is more than 68 sq km AND continent is 'North America'",
+    "constraint_logic": "(P1082 < 4362517.5) AND (P571 < 1792.0) AND (P2046 > 68.14516) AND (P30 is 'North America')",
     "new_ground_truth": [
-      "Q124165657"
+      "Q65"
     ],
     "new_answer_count": 1,
-    "complex_question": "Which film starring Diana Ross, directed by Bao Nguyen, is a documentary released after 1974?"
+    "complex_question": "Which US city founded before 1792, located in North America, has a population of less than 4.4 million and an area of more than 68 square kilometers?"
+  },
+  {
+    "original_question": "what countries did queen victoria rule?",
+    "source_id": "WebQTrn-197",
+    "original_answer_count": 5,
+    "constraint_description": "founded in after 1754 AND continent is 'Europe' AND population is less than 255.2M AND is a is 'historical country'",
+    "constraint_logic": "(P571 > 1754.0) AND (P30 is 'Europe') AND (P1082 < 255233194.75) AND (P31 is 'historical country')",
+    "new_ground_truth": [
+      "Q174193"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which European historical country founded after 1754, with a population under 255.2 million, was ruled by Queen Victoria?"
+  },
+    {
+    "original_question": "what books did beverly cleary write?",
+    "source_id": "WebQTrn-18",
+    "original_answer_count": 28,
+    "constraint_description": "is a is 'literary work' AND released date after 1956 AND award received is 'Newbery Medal'",
+    "constraint_logic": "(P31 is 'literary work') AND (P577 > 1956.75) AND (P166 is 'Newbery Medal')",
+    "new_ground_truth": [
+      "Q5246906"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which book by Beverly Cleary that is a literary work, was released after 1956 and received the Newbery Medal?"
+  },
+    {
+    "original_question": "who was elected president of the philippines?",
+    "source_id": "WebQTrn-157",
+    "original_answer_count": 45,
+    "constraint_description": "citizenship is 'United States' AND gender is 'male' AND born year after 1826 AND occupation is 'politician' AND educated at is 'Texas A&M University'",
+    "constraint_logic": "(P27 is 'United States') AND (P21 is 'male') AND (P569 > 1826.5) AND (P106 is 'politician') AND (P69 is 'Texas A&M University')",
+    "new_ground_truth": [
+      "Q215057"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which politician, a male United States citizen born after 1826 and educated at Texas A&M University, was elected president of the Philippines?"
   },
   {
     "original_question": "what did shawnee smith play in?",
@@ -23,20 +59,45 @@
     "new_answer_count": 1,
     "complex_question": "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
   },
-
     {
-    "original_question": "what movies does taylor lautner play in?",
-    "source_id": "WebQTrn-25",
-    "original_answer_count": 15,
-    "constraint_description": "starring is 'Taylor Lautner' AND released date after 2009 AND duration is less than 122.50 min AND box office is less than $711.9M",
-    "constraint_logic": "(P161 is 'Taylor Lautner') AND (P577 > 2009.0) AND (P2047 < 122.5) AND (P2142 < 711909412.25)",
+    "original_question": "what tv show did joey lawrence play on?",
+    "source_id": "WebQTrn-69",
+    "original_answer_count": 5,
+    "constraint_description": "genre is 'American television sitcom' AND duration is less than 32.50 min",
+    "constraint_logic": "(P136 is 'American television sitcom') AND (P2047 < 32.5)",
     "new_ground_truth": [
-      "Q143716"
+      "Q821153"
     ],
     "new_answer_count": 1,
-    "complex_question": "Which movie starring Taylor Lautner was released after 2009, has a runtime shorter than 122.5 minutes, and a box office gross of less than $711.9 million?"
+    "complex_question": "Which TV show starring Joey Lawrence is an American television sitcom with a runtime of less than 32.5 minutes?"
   },
 
+
+    {
+    "original_question": "where is the thames river located?",
+    "source_id": "WebQTrn-208",
+    "original_answer_count": 9,
+    "constraint_description": "is a is 'ceremonial county of England' AND area is less than 3.6K sq km AND population is more than 656.6K AND headquartered in is 'Reigate'",
+    "constraint_logic": "(P31 is 'ceremonial county of England') AND (P2046 < 3577.5455) AND (P1082 > 656604.5) AND (P159 is 'Reigate')",
+    "new_ground_truth": [
+      "Q23276"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which ceremonial county of England with an area of less than 3.6 thousand square kilometers, a population of more than 656.6 thousand, and headquartered in Reigate is the location of the Thames River?"
+  },
+
+    {
+    "original_question": "what influenced vincent van gogh work?",
+    "source_id": "WebQTrn-192",
+    "original_answer_count": 7,
+    "constraint_description": "born year before 1839 AND died in before 1888 AND genre is 'nude'",
+    "constraint_logic": "(P569 < 1839.0) AND (P570 < 1888.0) AND (P136 is 'nude')",
+    "new_ground_truth": [
+      "Q5599"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which artist born before 1839 who died before 1888 and worked in the nude genre influenced Vincent van Gogh?"
+  },
   {
     "original_question": "what books did beverly cleary write?",
     "source_id": "WebQTrn-18",
@@ -49,6 +110,32 @@
     "new_answer_count": 1,
     "complex_question": "Which book in the novel series genre by Beverly Cleary is classified as children's fiction?"
   },
+  {
+    "original_question": "what movies did diana ross play in?",
+    "source_id": "WebQTrn-203",
+    "original_answer_count": 6,
+    "constraint_description": "is a is 'film' AND released date after 1974 AND genre is 'documentary film' AND directed by is 'Bao Nguyen'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 1974.25) AND (P136 is 'documentary film') AND (P57 is 'Bao Nguyen')",
+    "new_ground_truth": [
+      "Q124165657"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Diana Ross, directed by Bao Nguyen, is a documentary released after 1974?"
+  },
+
+  {
+    "original_question": "what movies does taylor lautner play in?",
+    "source_id": "WebQTrn-25",
+    "original_answer_count": 15,
+    "constraint_description": "starring is 'Taylor Lautner' AND released date after 2009 AND duration is less than 122.50 min AND box office is less than $711.9M",
+    "constraint_logic": "(P161 is 'Taylor Lautner') AND (P577 > 2009.0) AND (P2047 < 122.5) AND (P2142 < 711909412.25)",
+    "new_ground_truth": [
+      "Q143716"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which movie starring Taylor Lautner was released after 2009, has a runtime shorter than 122.5 minutes, and a box office gross of less than $711.9 million?"
+  },
+
   {
     "original_question": "what books did beverly cleary write?",
     "source_id": "WebQTrn-18",
@@ -276,18 +363,6 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which TV show starring Melinda Culea and of the American television sitcom genre did Joey Lawrence appear in?"
-  },
-  {
-    "original_question": "what tv show did joey lawrence play on?",
-    "source_id": "WebQTrn-69",
-    "original_answer_count": 5,
-    "constraint_description": "genre is 'American television sitcom' AND duration is less than 32.50 min",
-    "constraint_logic": "(P136 is 'American television sitcom') AND (P2047 < 32.5)",
-    "new_ground_truth": [
-      "Q821153"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which TV show starring Joey Lawrence is an American television sitcom with a runtime of less than 32.5 minutes?"
   },
   {
     "original_question": "what tv show did joey lawrence play on?",
@@ -617,18 +692,6 @@
     "original_question": "who was elected president of the philippines?",
     "source_id": "WebQTrn-157",
     "original_answer_count": 45,
-    "constraint_description": "citizenship is 'United States' AND gender is 'male' AND born year after 1826 AND occupation is 'politician' AND educated at is 'Texas A&M University'",
-    "constraint_logic": "(P27 is 'United States') AND (P21 is 'male') AND (P569 > 1826.5) AND (P106 is 'politician') AND (P69 is 'Texas A&M University')",
-    "new_ground_truth": [
-      "Q215057"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which politician, a male United States citizen born after 1826 and educated at Texas A&M University, was elected president of the Philippines?"
-  },
-  {
-    "original_question": "who was elected president of the philippines?",
-    "source_id": "WebQTrn-157",
-    "original_answer_count": 45,
     "constraint_description": "citizenship is 'United States' AND gender is 'male' AND born year after 1826 AND occupation is 'politician' AND award received is 'National Defense Service Medal'",
     "constraint_logic": "(P27 is 'United States') AND (P21 is 'male') AND (P569 > 1826.5) AND (P106 is 'politician') AND (P166 is 'National Defense Service Medal')",
     "new_ground_truth": [
@@ -937,18 +1000,7 @@
     "new_answer_count": 1,
     "complex_question": "Which US city founded before 1792 has a population of more than 135.2 thousand, an elevation above 32 meters, and an area of more than 68 square kilometers?"
   },
-  {
-    "original_question": "what are the 5 biggest cities in the usa?",
-    "source_id": "WebQTrn-194",
-    "original_answer_count": 5,
-    "constraint_description": "population is less than 4.4M AND founded in before 1792 AND area is more than 68 sq km AND continent is 'North America'",
-    "constraint_logic": "(P1082 < 4362517.5) AND (P571 < 1792.0) AND (P2046 > 68.14516) AND (P30 is 'North America')",
-    "new_ground_truth": [
-      "Q65"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which US city founded before 1792, located in North America, has a population of less than 4.4 million and an area of more than 68 square kilometers?"
-  },
+
   {
     "original_question": "what countries did queen victoria rule?",
     "source_id": "WebQTrn-197",
@@ -1152,18 +1204,6 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which place headquartered in Reigate has a population of more than 656.6 thousand and an area of more than 1.6 thousand square kilometers?"
-  },
-  {
-    "original_question": "where is the thames river located?",
-    "source_id": "WebQTrn-208",
-    "original_answer_count": 9,
-    "constraint_description": "is a is 'ceremonial county of England' AND area is less than 3.6K sq km AND population is more than 656.6K AND headquartered in is 'Reigate'",
-    "constraint_logic": "(P31 is 'ceremonial county of England') AND (P2046 < 3577.5455) AND (P1082 > 656604.5) AND (P159 is 'Reigate')",
-    "new_ground_truth": [
-      "Q23276"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which ceremonial county of England with an area of less than 3.6 thousand square kilometers, a population of more than 656.6 thousand, and headquartered in Reigate is the location of the Thames River?"
   },
   {
     "original_question": "where is the thames river located?",
