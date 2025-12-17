@@ -1,6 +1,5 @@
 import json
-import os
-import uuid
+import re
 from typing import List, Dict, Any, Optional, Set
 from wikidata_service import WikidataKG
 from openai import OpenAI
@@ -42,7 +41,6 @@ class LLMService:
             # 如果是 JSON 模式失败，返回空 JSON；否则返回空字符串
             return "{}" if json_mode else "Error generating answer."
 
-    # [在 main.py 的 LLMService 类中修改此方法]
     def decompose_query(self, query: str) -> List[Dict]:
         """
         核心 Prompt：将复杂自然语言问题分解为 Anchors 和 Filters
@@ -94,11 +92,9 @@ class LLMService:
             return []
 
 
-
-    # 在 LLMService 类中添加
     def select_best_path(self, question: str, anchor_text: str, candidates: List[Dict]) -> Dict:
         """
-        从 KG 返回的真实关系列表中，选择最符合问题的一条。
+        给定一个锚点实体和它在 KG 中的候选关系列表，让 LLM 判断哪条关系指向用户想要的答案（例如，从“导演”指向“电影”）。
         """
         # 构造选项列表字符串
         # 格式: [P50] author (direction: reverse)
@@ -166,7 +162,6 @@ class GoTEngine:
         self.kg = WikidataKG()
         self.root = None
 
-    # [替换 main.py 中 GoTEngine 类的 run 方法]
     def run(self, complex_question_data: Dict):
         question = complex_question_data['complex_question']
         print(f"\n{'=' * 60}\nUser Query: {question}\n{'=' * 60}")
@@ -245,20 +240,34 @@ class GoTEngine:
             print("Error: All anchors failed to link or find paths.")
             return
 
+
         # =================================================================
-        # [Layer 2] Alignment (Mapping Filters to Schema)
+        # [Layer 2] Alignment (Mapping Filters to Sample Schema)
         # =================================================================
         print("\n[Layer 2] Alignment (Mapping Filters to Sample Schema)...")
 
         # 1. 获取 Sample 的属性列表
-        # 如果采样失败，_fetch_available_properties 会返回空，后续逻辑会 fallback 到常用属性字典
         schema_context = self._fetch_available_properties(sample_qid)
 
-        # 2. 对 Filter 中的 Value 做实体链接 (例如 'documentary' -> Q93204)
+        # 2. [修复版] 对 Filter 中的 Value 做实体链接
+        # 逻辑修改：只有当 Value 是字符串，且不像日期、不像浮点数时，才去搜 QID
         for item in raw_filters:
-            if isinstance(item['value'], str) and not item['value'].isdigit():
-                qid = self.kg.search_entity_id(item['value'])
-                if qid: item['value_qid'] = qid
+            val = item.get('value')
+            if isinstance(val, str):
+                # 排除纯数字
+                if val.isdigit():
+                    continue
+                # 排除浮点数 (e.g., "1.86")
+                if re.match(r'^\d+\.\d+$', val):
+                    continue
+                # 排除日期格式 (YYYY-MM-DD)
+                if re.match(r'^\d{4}-\d{2}-\d{2}$', val):
+                    continue
+
+                # 只有剩下的（比如 "Documentary", "USA"）才去搜 ID
+                qid = self.kg.search_entity_id(val)
+                if qid:
+                    item['value_qid'] = qid
 
         # 3. 对齐属性
         aligned_filters = []
@@ -300,8 +309,6 @@ class GoTEngine:
             for k, v in entity.get('attributes', {}).items():
                 context_str += f"  - {k}: {v}\n"
 
-            # 3. [关键!] 关系证据 (Anchors) - 强行把 Diana Ross 写进去
-            # 逻辑：既然这个实体是靠搜 Diana Ross 找到的，那它一定和 Diana Ross 有关系
             context_str += "Verified Relationships (Anchors):\n"
             for anchor in final_anchors_config:
                 role = anchor.get('name')
@@ -322,7 +329,7 @@ class GoTEngine:
             Evidence Retrieved from Knowledge Graph:
             {final_context}
 
-            Please answer the question. If the evidence contains the answer, state it clearly.
+            Final Answer:
             """
 
         ans = self.llm.chat(system_prompt, user_prompt, json_mode=False)
@@ -443,112 +450,70 @@ class GoTEngine:
 
     # -------- 辅助方法 (Helpers) --------
 
-    def _get_sample_instance(self, anchor):
-        """
-        helper: 找一个具体的例子来学习 Schema
-        """
-        # 这里需要知道 Anchor 的关系方向。如果是 "Starring Taylor", 关系是 P161
-        # 但我们可能不知道 P161。
-        # 策略：直接查 ?item ?p wd:QAnchor.
-        query = f"SELECT ?item WHERE {{ ?item ?p wd:{anchor['qid']} }} LIMIT 1"
-        res = self.kg.execute_query(query)
-        if res:
-            return res[0]['item']['value'].split('/')[-1]
-        return None
-
     def _fetch_available_properties(self, sample_qid):
-        """
-        获取样本实体的所有属性（移除 LIMIT 限制，确保不漏掉关键属性）。
-        """
         if not sample_qid: return {}
 
-        # 移除 LIMIT 50，改为 LIMIT 500 或不设限
+        # 增加 skos:altLabel 获取别名
         query = f"""
-        SELECT DISTINCT ?p ?pLabel ?valLabel WHERE {{
+        SELECT DISTINCT ?p ?pLabel (GROUP_CONCAT(DISTINCT ?altLabel; separator=", ") AS ?aliases) ?valLabel WHERE {{
           wd:{sample_qid} ?p ?val .
           ?prop wikibase:directClaim ?p .
+
+          # 获取 Label
           SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
           ?prop rdfs:label ?pLabel .
           FILTER(LANG(?pLabel) = "en")
-          OPTIONAL {{ ?val rdfs:label ?valLabel . FILTER(LANG(?valLabel) = "en") }}
-        }} LIMIT 500
+
+          # 获取 Aliases (可选)
+          OPTIONAL {{ 
+            ?prop skos:altLabel ?altLabel . 
+            FILTER(LANG(?altLabel) = "en") 
+          }}
+
+          # 获取值的示例 (用于辅助判断类型)
+          OPTIONAL {{ 
+            ?val rdfs:label ?valLabel . 
+            FILTER(LANG(?valLabel) = "en") 
+          }}
+        }} 
+        GROUP BY ?p ?pLabel ?valLabel
+        LIMIT 500
         """
         res = self.kg.execute_query(query)
         schema = {}
 
-        # 过滤无用的 ID 属性
         ignore_keywords = ["ID", "identifier", "code", "number"]
 
         for r in res:
             pid = r['p']['value'].split('/')[-1]
             p_label = r.get('pLabel', {}).get('value', 'Unknown')
+            aliases = r.get('aliases', {}).get('value', '')
             val_example = r.get('valLabel', {}).get('value', '')
 
-            # 简单过滤：跳过包含 ID 的属性，除非是特定关键属性
+            # 简单的过滤
             if any(k in p_label for k in ignore_keywords) and "tax" not in p_label:
                 continue
 
             if pid not in schema:
-                desc = f"{p_label}"
+                # 构造更丰富的描述： "duration (Aliases: runtime, length) [Example: 120]"
+                desc = f"Label: {p_label}"
+                if aliases:
+                    desc += f" | Aliases: {aliases}"
                 if val_example:
-                    desc += f" (e.g., {val_example})"
+                    desc += f" | Example Value: {val_example}"
+
                 schema[pid] = desc
         return schema
 
-    def _map_filters_with_schema(self, raw_filters, schema_map):
-        """
-        让 LLM 根据 KG 返回的 schema_map 做映射
-        """
-        schema_desc = "\n".join([f"{k}: {v}" for k, v in schema_map.items()])
-
-        prompt_content = []
-        for f in raw_filters:
-            prompt_content.append(f"Attribute: '{f['key']}' (Context: {f['op']} {f['value']})")
-
-        user_prompt = f"""
-        I have a list of user constraints (Attributes). Map them to the most likely Wikidata Property ID based on the Candidate Properties list provided.
-
-        Candidate Properties from KG:
-        {schema_desc}
-
-        User Constraints:
-        {json.dumps(prompt_content)}
-
-        Output JSON format:
-        [
-            {{"original_key": "runtime", "mapped_pid": "P2047"}},
-            ...
-        ]
-        If no good match is found in candidates, try to predict the PID or output null.
-        """
-
-        response = self.llm.chat("You are a Schema Mapping Expert.", user_prompt)
-        try:
-            mapping = json.loads(response)
-            # 将 PID 回填到 filters 中
-            mapped_filters = []
-            for f in raw_filters:
-                new_f = f.copy()
-                # 找对应的 PID
-                match = next((m for m in mapping if m.get('original_key') == f['key']), None)
-                if match and match.get('mapped_pid'):
-                    new_f['key'] = match['mapped_pid']  # 替换为 P2047
-                    mapped_filters.append(new_f)
-                else:
-                    print(f"Warning: Could not map attribute '{f['key']}'")
-            return mapped_filters
-        except:
-            print("Mapping failed.")
-            return raw_filters
 
 # ==========================================
 # 运行脚本
 # ==========================================
 if __name__ == "__main__":
     # 1. 配置 API 信息
-    API_KEY = "sk-wZPm2CCFydnh7Nuh9vuaMBLYiJxBxP0MsIMwp6rGZ87JVzkF"  # 填入你的真实 Key
-    BASE_URL = "https://api.chatanywhere.tech"  # 或者 OpenAI 的地址
-    MODEL_NAME = "gpt-3.5-turbo"
+    API_KEY = "sk-iedkedhtzkamboikwwoamudadmxmuwvrxwovbedjzvcycqda"  # 填入你的真实 Key
+    BASE_URL = "https://api.siliconflow.cn/v1/"  # 或者 OpenAI 的地址
+    MODEL_NAME = "deepseek-ai/DeepSeek-V3.2"
 
     # 2. 指定数据集路径 (请根据你本地实际路径修改)
     DATASET_PATH = "D:\GitHub\CCSP\datasets\complex_constraint_dataset_rewrite_queries.json"
@@ -560,7 +525,6 @@ if __name__ == "__main__":
 
     # 3. 初始化引擎 (只初始化一次，复用连接)
     engine = GoTEngine(api_key=API_KEY, base_url=BASE_URL, model=MODEL_NAME)
-
     try:
         # 4. 读取数据集
         print(f"正在加载数据集: {DATASET_PATH} ...")

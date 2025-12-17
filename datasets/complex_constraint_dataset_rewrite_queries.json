@@ -1,4 +1,40 @@
-[
+[    {
+    "original_question": "who won golden boot?",
+    "source_id": "WebQTrn-206",
+    "original_answer_count": 5,
+    "constraint_description": "height is less than 1.86 m AND born year after 1974 AND mass is less than 82 kg AND award received is 'Premier League Golden Boot'",
+    "constraint_logic": "(P2048 < 1.865) AND (P569 > 1974.5) AND (P2067 < 82.0) AND (P166 is 'Premier League Golden Boot')",
+    "new_ground_truth": [
+      "Q119562"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which player born after 1974, with a height under 1.86 m and a mass under 82 kg, received the Premier League Golden Boot?"
+  },
+      {
+    "original_question": "what did shawnee smith play in?",
+    "source_id": "WebQTrn-115",
+    "original_answer_count": 32,
+    "constraint_description": "is a is 'film' AND released date after 1995 AND duration is less than 109.50 min AND genre is 'horror film' AND directed by is 'Kevin Greutert' AND starring is 'Chester Bennington'",
+    "constraint_logic": "(P31 is 'film') AND (P577 > 1995.0) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P57 is 'Kevin Greutert') AND (P161 is 'Chester Bennington')",
+    "new_ground_truth": [
+      "Q676284"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
+  },
+
+{
+    "original_question": "what countries do people speak portuguese?",
+    "source_id": "WebQTrn-60",
+    "original_answer_count": 11,
+    "constraint_description": "is a is 'country' AND founded in before 1992 AND population is more than 284.0K AND area is less than 1.0M sq km AND country is 'Portugal'",
+    "constraint_logic": "(P31 is 'country') AND (P571 < 1992.0) AND (P1082 > 283961.5) AND (P2046 < 1024145.0) AND (P17 is 'Portugal')",
+    "new_ground_truth": [
+      "Q45"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which country where Portuguese is spoken was founded before 1992, has a population of more than 284.0 thousand, an area of less than 1.0 million square kilometers, and is Portugal?"
+  },
     {
     "original_question": "what are the 5 biggest cities in the usa?",
     "source_id": "WebQTrn-194",
@@ -46,18 +82,6 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which politician, a male United States citizen born after 1826 and educated at Texas A&M University, was elected president of the Philippines?"
-  },
-  {
-    "original_question": "what did shawnee smith play in?",
-    "source_id": "WebQTrn-115",
-    "original_answer_count": 32,
-    "constraint_description": "is a is 'film' AND released date after 1995 AND duration is less than 109.50 min AND genre is 'horror film' AND directed by is 'Kevin Greutert' AND starring is 'Chester Bennington'",
-    "constraint_logic": "(P31 is 'film') AND (P577 > 1995.0) AND (P2047 < 109.5) AND (P136 is 'horror film') AND (P57 is 'Kevin Greutert') AND (P161 is 'Chester Bennington')",
-    "new_ground_truth": [
-      "Q676284"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
   },
     {
     "original_question": "what tv show did joey lawrence play on?",
@@ -291,18 +315,6 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which movie starring Josh Hutcherson, released after 2007, is a thriller film with a runtime longer than 95 minutes and a box office gross of less than $653.4 million?"
-  },
-  {
-    "original_question": "what countries do people speak portuguese?",
-    "source_id": "WebQTrn-60",
-    "original_answer_count": 11,
-    "constraint_description": "is a is 'country' AND founded in before 1992 AND population is more than 284.0K AND area is less than 1.0M sq km AND country is 'Portugal'",
-    "constraint_logic": "(P31 is 'country') AND (P571 < 1992.0) AND (P1082 > 283961.5) AND (P2046 < 1024145.0) AND (P17 is 'Portugal')",
-    "new_ground_truth": [
-      "Q45"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which country where Portuguese is spoken was founded before 1992, has a population of more than 284.0 thousand, an area of less than 1.0 million square kilometers, and is Portugal?"
   },
   {
     "original_question": "what countries do people speak portuguese?",
@@ -1109,18 +1121,7 @@
     "new_answer_count": 1,
     "complex_question": "Which film starring Stevie Wonder classified as a documentary and released after 1974 features Diana Ross?"
   },
-  {
-    "original_question": "who won golden boot?",
-    "source_id": "WebQTrn-206",
-    "original_answer_count": 5,
-    "constraint_description": "height is less than 1.86 m AND born year after 1974 AND mass is less than 82 kg AND award received is 'Premier League Golden Boot'",
-    "constraint_logic": "(P2048 < 1.865) AND (P569 > 1974.5) AND (P2067 < 82.0) AND (P166 is 'Premier League Golden Boot')",
-    "new_ground_truth": [
-      "Q119562"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which player born after 1974, with a height under 1.86 m and a mass under 82 kg, received the Premier League Golden Boot?"
-  },
+
   {
     "original_question": "who won golden boot?",
     "source_id": "WebQTrn-206",

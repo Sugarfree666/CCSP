@@ -12,7 +12,6 @@ class WikidataKG:
         self.endpoint = "https://query.wikidata.org/sparql"
         self.sparql = SPARQLWrapper(self.endpoint)
         self.sparql.setReturnFormat(JSON)
-        # 关键点1：必须设置独特的 User-Agent，包含你的联系方式，这是Wikidata要求的
         self.sparql.addCustomHttpHeader("User-Agent", "CCSP-Research-Bot/1.0 (uniqueyqlf@gmail.com)")
 
         # 关键点2：初始化本地缓存
@@ -101,7 +100,7 @@ class WikidataKG:
 
         # --- [修改点] 定义 Headers，必须包含 User-Agent ---
         headers = {
-            "User-Agent": "CCSP-Research-Bot/1.0 (uniqueyqlf@gmail.com)"  # 使用和你 __init__ 中一样的邮箱
+            "User-Agent": "CCSP-Research-Bot/1.0 (uniqueyqlf@gmail.com)"
         }
 
         try:
@@ -135,7 +134,7 @@ class WikidataKG:
 
     def get_candidate_relations(self, qid):
         """
-        [通用方法] 获取与 Anchor 相连的所有属性（Top 50），包括正向和反向。
+        [通用方法] 获取与 Anchor 相连的所有属性（Top 150），包括正向和反向。
         优化版：增加了 PREFIX，修复了 Label 获取逻辑。
         """
         # 定义标准前缀
@@ -194,21 +193,23 @@ class WikidataKG:
 
         return relations
 
-    # [请替换 wikidata_service.py 中的 construct_sparql_from_got 方法]
     def construct_sparql_from_got(self, anchors, filters):
         """
         根据 GoT 的节点构建 SPARQL。
-        修复：增强了日期字符串 ("1974") 的处理逻辑，防止生成非法 XSD 日期。
+        [修复版]
+        1. 增加了 PREFIX xsd
+        2. 修复逻辑：如果是不等号运算 (>, <)，强制忽略 QID，走数值/日期过滤逻辑。
         """
         select_vars = ["?item", "?itemLabel", "?itemDescription"]
         where_clauses = []
 
-        # 自动添加标准前缀，防止部分环境报错
+        # [修改点1] 添加 xsd 前缀
         prefixes = """
         PREFIX wd: <http://www.wikidata.org/entity/>
         PREFIX wdt: <http://www.wikidata.org/prop/direct/>
         PREFIX wikibase: <http://wikiba.se/ontology#>
         PREFIX bd: <http://www.bigdata.com/rdf#>
+        PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>
         """
 
         where_clauses.append('SERVICE wikibase:label { bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }')
@@ -234,13 +235,16 @@ class WikidataKG:
             if not prop or not prop.startswith('P'):
                 continue
 
-            # 变量名清洗
             safe_key = "".join(x for x in flt.get('original_key', 'var') if x.isalnum())
             var_name = f"?{safe_key}_{i}"
             select_vars.append(var_name)
 
-            # 分支 A: 精确 QID
-            if val_qid and val_qid.startswith('Q'):
+            # [修改点2] 逻辑判断顺序调整
+            # 如果操作符是范围比较 (>, <)，说明这绝对不是实体匹配，必须走数值分支。
+            is_inequality = op in ['>', '<', '>=', '<=']
+
+            # 分支 A: 精确 QID 匹配 (仅当操作符是 == 或 contains，且有 QID 时)
+            if val_qid and val_qid.startswith('Q') and not is_inequality:
                 where_clauses.append(f"?item wdt:{prop} wd:{val_qid} .")
                 label_var = f"{var_name}_Label"
                 where_clauses.append(
@@ -248,42 +252,39 @@ class WikidataKG:
                 select_vars.append(label_var)
                 continue
 
-            # 分支 B: 数值与字符串
+            # 分支 B: 数值与日期处理 (包含不等号情况)
             where_clauses.append(f"?item wdt:{prop} {var_name} .")
 
-            is_numeric_op = op in ['>', '<', '>=', '<=']
-            # 显式判断属性名是否包含日期关键词，或者值本身看起来像日期
+            # 显式判断属性名是否包含日期关键词
             key_lower = str(prop).lower()
-            is_date_prop = any(k in key_lower for k in ["date", "time", "born", "died", "publication"])
+            # 这里其实 prop 已经是 Pxxx 了，没办法通过名字判断，得靠值或者外部 schema 传入的类型。
+            # 但我们可以通过值的格式来强行推断。
 
-            # 只有当属性明显是日期，或者值是典型的年份格式(1xxx, 2xxx)时，才转日期
+            # 判断是否像日期:
+            # 1. 是数字且在 1000-2030 之间 (年份)
+            # 2. 字符串格式包含 T (ISO) 或者 YYYY-MM-DD
             is_year_val = isinstance(val, (int, float, str)) and str(val).isdigit() and 1000 <= float(val) <= 2030
+            is_iso_date = isinstance(val, str) and ("-" in val or "T" in val) and any(c.isdigit() for c in val)
 
-            if is_date_prop or (is_year_val and "rating" not in key_lower and "duration" not in key_lower):
+            if is_iso_date or (is_year_val and "rating" not in key_lower and "duration" not in key_lower):
                 # 日期处理逻辑
                 date_str = None
-                if str(val).isdigit():  # 年份
+                if str(val).isdigit():  # 年份 -> 1974-01-01
                     date_str = f"{val}-01-01T00:00:00Z"
-                elif isinstance(val, str) and "T" in val:
-                    date_str = val
                 elif isinstance(val, str):
-                    date_str = f"{val}T00:00:00Z"
+                    # 如果是 1974-12-31 这种格式
+                    if "T" not in val and len(val.split('-')) == 3:
+                        date_str = f"{val}T00:00:00Z"
+                    else:
+                        date_str = val  # 假设已经是 ISO 格式
 
                 if date_str:
                     where_clauses.append(f"FILTER({var_name} {op} '{date_str}'^^xsd:dateTime)")
 
-            elif is_numeric_op:
-                # 纯数值处理 (评分、时长等)
+            else:
+                # 纯数值处理 (评分、时长、身高、体重)
+                # 只有当它是数字时才不过滤
                 where_clauses.append(f"FILTER({var_name} {op} {val})")
-
-            # 分支 C: 字符串模糊匹配
-            elif isinstance(val, str):
-                safe_val = str(val).replace("'", "\\'")
-                var_label = f"{var_name}_Label"
-                where_clauses.append(f"{var_name} rdfs:label {var_label} .")
-                where_clauses.append(f"FILTER(LANG({var_label}) = 'en')")
-                where_clauses.append(f'FILTER(CONTAINS(LCASE({var_label}), LCASE("{safe_val}")))')
-                select_vars.append(var_label)
 
         # 3. 组装
         sparql = f"{prefixes}\nSELECT DISTINCT {' '.join(select_vars)} WHERE {{\n"
