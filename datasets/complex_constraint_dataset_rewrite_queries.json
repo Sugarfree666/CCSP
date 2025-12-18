@@ -1,16 +1,5 @@
-[    {
-    "original_question": "who won golden boot?",
-    "source_id": "WebQTrn-206",
-    "original_answer_count": 5,
-    "constraint_description": "height is less than 1.86 m AND born year after 1974 AND mass is less than 82 kg AND award received is 'Premier League Golden Boot'",
-    "constraint_logic": "(P2048 < 1.865) AND (P569 > 1974.5) AND (P2067 < 82.0) AND (P166 is 'Premier League Golden Boot')",
-    "new_ground_truth": [
-      "Q119562"
-    ],
-    "new_answer_count": 1,
-    "complex_question": "Which player born after 1974, with a height under 1.86 m and a mass under 82 kg, received the Premier League Golden Boot?"
-  },
-      {
+[
+        {
     "original_question": "what did shawnee smith play in?",
     "source_id": "WebQTrn-115",
     "original_answer_count": 32,
@@ -21,6 +10,18 @@
     ],
     "new_answer_count": 1,
     "complex_question": "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
+  },
+  {
+    "original_question": "who won golden boot?",
+    "source_id": "WebQTrn-206",
+    "original_answer_count": 5,
+    "constraint_description": "height is less than 1.86 m AND born year after 1974 AND mass is less than 82 kg AND award received is 'Premier League Golden Boot'",
+    "constraint_logic": "(P2048 < 1.865) AND (P569 > 1974.5) AND (P2067 < 82.0) AND (P166 is 'Premier League Golden Boot')",
+    "new_ground_truth": [
+      "Q119562"
+    ],
+    "new_answer_count": 1,
+    "complex_question": "Which player born after 1974, with a height under 1.86 m and a mass under 82 kg, received the Premier League Golden Boot?"
   },
 
 {
