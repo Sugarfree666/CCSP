@@ -36,12 +36,25 @@ def search_wikidata(label: str) -> str:
         "format": "json",
         "limit": 1
     }
+    headers = {
+        "User-Agent": "CCSP-Bot/1.0 (Research Project - Educational Use)",
+        "Accept": "application/json"
+    }
     try:
-        response = requests.get(url, params=params, timeout=5)
+        # 添加 headers 参数
+        response = requests.get(url, params=params, headers=headers, timeout=5)
+
+        # 增加状态码检查
+        if response.status_code != 200:
+            logger.warning(f"[Entity Search] HTTP Error {response.status_code} for '{label}'")
+            return None
+
         data = response.json()
         if data.get("search"):
-            # 返回第一个匹配项的 ID (e.g., "Q19198")
             return data["search"][0]["id"]
+
+    except json.JSONDecodeError:
+        logger.warning(f"[Entity Search] JSON Decode Error for '{label}'. Response text: {response.text[:100]}...")
     except Exception as e:
         logger.warning(f"[Entity Search] Failed for '{label}': {e}")
 
@@ -214,15 +227,26 @@ class GraphReasoningExecutor:
     def _fetch_anchor_candidates(self, c: Constraint) -> Set[str]:
         """
         针对 Anchor 节点生成初始 SPARQL 并执行。
-        返回 QID 的集合 (e.g., {'Q123', 'Q456'})
         """
         val_str = str(c.value)
-        # 构建查询：如果是 QID 用 wd:，否则用字面量匹配
+
+        # 情况 A: 已经是 QID (e.g., Q19198) - 最理想情况
         if re.match(r'^Q\d+$', val_str):
             where_clause = f"?item wdt:{c.property_id} wd:{val_str} ."
+
+        # 情况 B: 仍然是字符串 (Entity Linking 失败)
+        # 我们不能直接比较 ?item wdt:Pxx "String"，因为对象通常是 URI。
+        # 我们需要查找该对象的 Label 是否匹配字符串。
         else:
-            # 对于 Anchor，如果是字面量，通常用字符串匹配
-            where_clause = f"?item wdt:{c.property_id} ?v . FILTER(?v = '{val_str}')"
+            logger.info(f"Fallback: Searching by label match for {val_str} on property {c.property_id}")
+            # 这是一个比较昂贵的操作，但比返回0结果要好
+            # 逻辑：?item -> ?target_entity -> [Label == "Chester Bennington"]
+            where_clause = f"""
+                ?item wdt:{c.property_id} ?target .
+                ?target rdfs:label ?targetLabel .
+                FILTER(LCASE(STR(?targetLabel)) = LCASE("{val_str}")) .
+                FILTER(LANG(?targetLabel) = "en") .
+            """
 
         sparql = f"""
         SELECT DISTINCT ?item WHERE {{
@@ -230,9 +254,12 @@ class GraphReasoningExecutor:
         }}
         LIMIT 1000
         """
+
+        # 调试用：打印生成的 SPARQL
+        print(f"DEBUG SPARQL:\n{sparql}")
+
         results = self.service.execute_sparql(sparql)
 
-        # 提取 QID (e.g., "http://.../entity/Q123" -> "Q123")
         qids = set()
         for r in results:
             url = r['item']['value']
