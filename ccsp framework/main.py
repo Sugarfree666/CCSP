@@ -1,554 +1,421 @@
+import sys
 import json
+import logging
 import re
-from typing import List, Dict, Any, Optional, Set
-from wikidata_service import WikidataKG
-from openai import OpenAI
+import os
+import requests
+from typing import List, Dict, Any, Set
+
+# === 引入自定义模块 ===
+# 确保 data_model.py, optimizer.py, wikidata_service.py 在同一目录下
+from data_model import Constraint
+from optimizer import ConstraintOptimizer
+from wikidata_service import WikidataService
+from openai import OpenAI, OpenAIError
+
+# === 配置日志 ===
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger("CCSP-GraphEngine")
 
 
-# ==========================================
-# 1. 配置与 LLM 适配层 (LLM Adapter)
-# ==========================================
+# ==============================================================================
+# 0. 工具函数：实体链接 (解决 LLM 幻觉的关键)
+# ==============================================================================
+def search_wikidata(label: str) -> str:
+    """
+    使用 Wikidata API 搜索实体的真实 QID。
+    """
+    url = "https://www.wikidata.org/w/api.php"
+    params = {
+        "action": "wbsearchentities",
+        "search": label,
+        "language": "en",
+        "format": "json",
+        "limit": 1
+    }
+    try:
+        response = requests.get(url, params=params, timeout=5)
+        data = response.json()
+        if data.get("search"):
+            # 返回第一个匹配项的 ID (e.g., "Q19198")
+            return data["search"][0]["id"]
+    except Exception as e:
+        logger.warning(f"[Entity Search] Failed for '{label}': {e}")
 
+    return None
+
+
+# ==============================================================================
+# 1. LLM 服务 (支持代理与清洗)
+# ==============================================================================
 class LLMService:
-    """
-    基于 OpenAI 格式的 LLM 服务封装 (支持 DeepSeek, GPT-4 等)
-    """
-
     def __init__(self, api_key: str, base_url: str, model: str):
-        self.client = OpenAI(api_key=api_key, base_url=base_url)
         self.model = model
+        self.client = OpenAI(api_key=api_key, base_url=base_url)
 
-    def chat(self, system_prompt: str, user_prompt: str, json_mode: bool = True) -> str:
+    def generate_text(self, prompt: str) -> str:
+        """生成自然语言回复 (非 JSON)"""
         try:
-            # 构造基本参数
-            params = {
-                "model": self.model,
-                "messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
-                ],
-                "temperature": 0.1,
-            }
-
-            # 只有在 json_mode=True 时才强制 JSON 格式
-            if json_mode:
-                params["response_format"] = {"type": "json_object"}
-
-            response = self.client.chat.completions.create(**params)
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,  # 稍微提高温度，让回答更自然
+            )
             return response.choices[0].message.content
         except Exception as e:
-            print(f"LLM Call Error: {e}")
-            # 如果是 JSON 模式失败，返回空 JSON；否则返回空字符串
-            return "{}" if json_mode else "Error generating answer."
+            logger.error(f"LLM Text Gen Error: {e}")
+            return "Sorry, I could not generate a final answer due to an error."
 
-    def decompose_query(self, query: str) -> List[Dict]:
-        """
-        核心 Prompt：将复杂自然语言问题分解为 Anchors 和 Filters
-        """
-        system_prompt = """
-        You are a query understanding engine for a Knowledge Graph QA system.
-        Your task is to decompose a complex natural language question into a list of structured constraints (Thoughts).
-
-        Analyze the question and break it down into:
-        1. **Anchors**: Concrete entities that are the STARTING POINTS of the search. 
-           - IMPORTANT: People (Actors, Directors, Authors), Locations, and Organizations are usually Anchors.
-           - If a query mentions multiple entities (e.g., "Movies by Director X starring Actor Y"), BOTH X and Y are Anchors.
-        2. **Filters**: Constraints on attributes, such as dates, numbers, genres, or simple adjectives.
-
-        Output Format (JSON):
-        {
-            "thoughts": [
-                {
-                    "content": "Description",
-                    "key": "Attribute name",
-                    "value": "Entity Name or Literal Value",
-                    "op": "Operator (==, >, <, contains)",
-                    "role": "anchor" or "filter",
-                    "type": "entity" or "literal"
-                }
-            ]
-        }
-
-        Example:
-        Input: "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995?"
-        Output:
-        {
-            "thoughts": [
-                {"content": "Starring Chester Bennington", "key": "cast", "value": "Chester Bennington", "op": "contains", "role": "anchor", "type": "entity"},
-                {"content": "Directed by Kevin Greutert", "key": "director", "value": "Kevin Greutert", "op": "contains", "role": "anchor", "type": "entity"},
-                {"content": "Released after 1995", "key": "release_date", "value": 1995, "op": ">", "role": "filter", "type": "literal"}
-            ]
-        }
-        """
-
-        user_prompt = f"Analyze and decompose this question: '{query}'"
-
-        result_str = self.chat(system_prompt, user_prompt)
+    def generate_json(self, prompt: str) -> Dict[str, Any]:
+        """增强版 JSON 生成：自动清洗特殊字符"""
         try:
-            data = json.loads(result_str)
-            return data.get("thoughts", [])
-        except json.JSONDecodeError:
-            print("Failed to decode JSON from LLM")
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.1,
+            )
+            text = response.choices[0].message.content
+
+            # 清洗：移除 Markdown 标记和不可见空格
+            text = text.replace('\u00A0', ' ')
+            json_match = re.search(r'\{.*\}|\[.*\]', text, re.DOTALL)
+
+            if json_match:
+                return json.loads(json_match.group(0))
+            return json.loads(text)
+        except Exception as e:
+            logger.error(f"LLM Error: {e}")
+            return {}
+
+
+# ==============================================================================
+# 2. Parsing (解析阶段)
+# ==============================================================================
+def parse_query_to_constraints(user_query: str, llm: LLMService) -> List[Constraint]:
+    logger.info("Phase 1: Parsing natural language to constraints...")
+
+    # Prompt 明确要求不猜 ID，只输出英文原名
+    prompt = f"""
+    Role: You are a Knowledge Graph Query Parser.
+    Task: Convert the user's question into structured constraints.
+
+    User Query: "{user_query}"
+
+    Requirements:
+    1. Identify atomic constraints.
+    2. Property ID: Predict P-ID if sure (e.g. P57), else empty.
+    3. Value: 
+       - **DO NOT GUESS QIDs**. 
+       - Output the exact **English Name** of the entity (e.g. "Chester Bennington", "Horror film").
+       - For numbers/dates, keep them as is.
+    4. Operator: =, >, <, contains.
+
+    Output JSON List:
+    [{{ "id": "c1", "property_id": "Pxx", "property_label": "...", "operator": "=", "value": "English Label Here", "softness": 0.0 }}]
+    """
+
+    try:
+        data = llm.generate_json(prompt)
+        constraints = []
+        if isinstance(data, list):
+            for item in data:
+                label_value = str(item.get("value", ""))
+                # === 实体链接逻辑 ===
+                # 如果不是 QID 且不是纯数字/日期，尝试搜索真实 QID
+                real_value = label_value
+                if label_value and not re.match(r'^Q\d+$', label_value) and not re.match(r'^[\d\.\-\:]+$', label_value):
+                    logger.info(f"Linking entity: '{label_value}' ...")
+                    found_qid = search_wikidata(label_value)
+                    if found_qid:
+                        logger.info(f"  -> Found: {found_qid}")
+                        real_value = found_qid
+                    else:
+                        logger.warning(f"  -> Not found, using original string.")
+
+                c = Constraint(
+                    id=item.get("id", "unknown"),
+                    property_id=item.get("property_id", ""),
+                    property_label=item.get("property_label", "unknown"),
+                    operator=item.get("operator", "="),
+                    value=real_value,
+                    softness=float(item.get("softness", 0.0))
+                )
+                constraints.append(c)
+        return constraints
+    except Exception as e:
+        logger.error(f"Parsing failed: {e}")
+        return []
+
+
+# ==============================================================================
+# 3. 核心：图推理执行引擎 (Graph Reasoning Engine)
+# ==============================================================================
+class GraphReasoningExecutor:
+    """
+    实现“Anchor -> Step-by-Step Screening”的执行逻辑。
+    """
+
+    def __init__(self, wikidata_service: WikidataService):
+        self.service = wikidata_service
+        self.trace = []  # 用于记录推理轨迹 (Evidence)
+
+    def execute(self, sorted_constraints: List[Constraint]) -> Dict[str, Any]:
+        """
+        执行推理并返回结果和证据。
+        Return: {
+            "final_entities": [{"id": "Qxx", "label": "Saw 3D"}],
+            "trace": ["Selected Anchor...", "Filtered by...", "Remaining..."]
+        }
+        """
+        self.trace = []  # 重置轨迹
+        if not sorted_constraints:
+            return {"final_entities": [], "trace": ["No constraints provided."]}
+
+        # 1. Anchor 阶段
+        anchor = sorted_constraints[0]
+        anchor_log = f"Step 1 (Anchor): Started search with [{anchor.property_label} = {anchor.value}]."
+        logger.info(anchor_log)
+        self.trace.append(anchor_log)
+
+        candidates = self._fetch_anchor_candidates(anchor)
+        count_log = f"  -> Found {len(candidates)} initial candidates."
+        logger.info(count_log)
+        self.trace.append(count_log)
+
+        if not candidates:
+            return {"final_entities": [], "trace": self.trace}
+
+        # 2. 逐步筛选 (Iterative Pruning)
+        for i, constraint in enumerate(sorted_constraints[1:], 2):
+            if not candidates:
+                break
+
+            step_log = f"Step {i} (Filter): Applying constraint [{constraint.property_label} {constraint.operator} {constraint.value}]."
+            logger.info(step_log)
+            self.trace.append(step_log)
+
+            candidates = self._apply_filter(candidates, constraint)
+
+            remain_log = f"  -> Candidates remaining: {len(candidates)}"
+            logger.info(remain_log)
+            self.trace.append(remain_log)
+
+        # 3. 获取最终结果的详细信息 (Label)
+        final_details = self._fetch_labels_for_qids(candidates)
+
+        return {
+            "final_entities": final_details,
+            "trace": self.trace
+        }
+
+    def _fetch_anchor_candidates(self, c: Constraint) -> Set[str]:
+        """
+        针对 Anchor 节点生成初始 SPARQL 并执行。
+        返回 QID 的集合 (e.g., {'Q123', 'Q456'})
+        """
+        val_str = str(c.value)
+        # 构建查询：如果是 QID 用 wd:，否则用字面量匹配
+        if re.match(r'^Q\d+$', val_str):
+            where_clause = f"?item wdt:{c.property_id} wd:{val_str} ."
+        else:
+            # 对于 Anchor，如果是字面量，通常用字符串匹配
+            where_clause = f"?item wdt:{c.property_id} ?v . FILTER(?v = '{val_str}')"
+
+        sparql = f"""
+        SELECT DISTINCT ?item WHERE {{
+            {where_clause}
+        }}
+        LIMIT 1000
+        """
+        results = self.service.execute_sparql(sparql)
+
+        # 提取 QID (e.g., "http://.../entity/Q123" -> "Q123")
+        qids = set()
+        for r in results:
+            url = r['item']['value']
+            if "entity/" in url:
+                qids.add(url.split("/")[-1])
+        return qids
+
+    def _apply_filter(self, current_candidates: Set[str], c: Constraint) -> Set[str]:
+        """
+        构造 VALUES 子句，对现有 candidates 进行 SPARQL 过滤。
+        """
+        # 将当前候选集转换为 VALUES 字符串 (e.g., "wd:Q1 wd:Q2 ...")
+        # 注意：如果候选集太大，可能需要分批处理。这里简化为一次处理。
+        values_str = " ".join([f"wd:{qid}" for qid in current_candidates])
+
+        val_str = str(c.value)
+        is_qid = bool(re.match(r'^Q\d+$', val_str))
+        is_date = bool(re.match(r'^\d{4}-\d{2}-\d{2}', val_str))
+        is_number = val_str.replace('.', '', 1).isdigit()
+
+        # 构造过滤逻辑
+        filter_clause = ""
+        target = f"wd:{val_str}" if is_qid else "?val"
+
+        triple = f"?item wdt:{c.property_id} {target} ."
+
+        if not is_qid:
+            # 构造 FILTER 表达式
+            if is_date:
+                val_fmt = f"'{val_str}'^^xsd:dateTime"
+            elif is_number:
+                val_fmt = val_str
+            else:
+                val_fmt = f"'{val_str}'"
+
+            if c.operator == ">":
+                filter_clause = f"FILTER(?val > {val_fmt})"
+            elif c.operator == "<":
+                filter_clause = f"FILTER(?val < {val_fmt})"
+            elif c.operator == "contains":
+                filter_clause = f"FILTER(CONTAINS(LCASE(?val), LCASE({val_fmt})))"
+            else:
+                filter_clause = f"FILTER(?val = {val_fmt})"
+
+        sparql = f"""
+        SELECT DISTINCT ?item WHERE {{
+            VALUES ?item {{ {values_str} }}
+            {triple}
+            {filter_clause}
+        }}
+        """
+
+        results = self.service.execute_sparql(sparql)
+
+        # 提取符合条件的 QID
+        valid_qids = set()
+        for r in results:
+            url = r['item']['value']
+            valid_qids.add(url.split("/")[-1])
+
+        return valid_qids
+
+    def _fetch_labels_for_qids(self, qids: Set[str]) -> List[Dict[str, str]]:
+        """
+        根据 QID 获取 Label，不再只是打印，而是返回数据结构
+        """
+        if not qids:
             return []
 
+        # 限制数量，防止 Prompt 过长
+        target_qids = list(qids)[:20]
+        values_str = " ".join([f"wd:{qid}" for qid in target_qids])
 
-    def select_best_path(self, question: str, anchor_text: str, candidates: List[Dict]) -> Dict:
+        sparql = f"""
+        SELECT ?item ?itemLabel WHERE {{
+            VALUES ?item {{ {values_str} }}
+            SERVICE wikibase:label {{ bd:serviceParam wikibase:language "[AUTO_LANGUAGE],en". }}
+        }}
         """
-        给定一个锚点实体和它在 KG 中的候选关系列表，让 LLM 判断哪条关系指向用户想要的答案（例如，从“导演”指向“电影”）。
-        """
-        # 构造选项列表字符串
-        # 格式: [P50] author (direction: reverse)
-        options_str = ""
-        for item in candidates:
-            dir_str = "Answer -> Anchor" if item['direction'] == "reverse" else "Anchor -> Answer"
-            options_str += f"- ID: {item['pid']} | Label: {item['label']} | Flow: {dir_str}\n"
-
-        system_prompt = """
-        You are a Path Selection Expert for Knowledge Graphs.
-        Your task: Select the SINGLE best relation ID that connects the Anchor Entity to the Target Answer intended by the User Question.
-
-        Example 1:
-        Question: "Books by Beverly Cleary?" (Anchor: Beverly Cleary)
-        Candidates include: "author (P50, Answer->Anchor)", "birth place (P19, Anchor->Answer)"
-        Choice: {"pid": "P50", "direction": "reverse"} (Because books point TO the author)
-
-        Example 2:
-        Question: "Capital of France?" (Anchor: France)
-        Candidates include: "capital (P36, Anchor->Answer)", "continent (P30, Anchor->Answer)"
-        Choice: {"pid": "P36", "direction": "forward"}
-
-        Return JSON: {"pid": "Pxxx", "direction": "forward/reverse"}
-        """
-
-        user_prompt = f"""
-        User Question: "{question}"
-        Anchor Entity: "{anchor_text}"
-
-        Candidate Relations from KG:
-        {options_str}
-
-        Which relation leads to the answer?
-        """
-
-        try:
-            res = self.chat(system_prompt, user_prompt)
-            return json.loads(res)
-        except:
-            # 保底策略：如果 LLM 选不出来，根据经验返回一个常见的
-            return {"pid": "P50", "direction": "reverse"}
-
-
-# ==========================================
-# 3. 思维图节点 (Thought Node)
-# ==========================================
-class ThoughtNode:
-    def __init__(self, role: str, content: Dict, parents: List['ThoughtNode'] = None):
-        self.role = role  # 'root', 'anchor', 'filter_raw', 'filter_aligned', 'sparql'
-        self.content = content  # 具体的约束数据
-        self.parents = parents if parents else []
-        self.children = []
-
-    def add_child(self, node):
-        self.children.append(node)
-
-
-# ==========================================
-# 4. 核心引擎 (GoT Engine for Complex Constraints)
-# ==========================================
-
-class GoTEngine:
-    def __init__(self, api_key: str, base_url: str, model:str):
-        self.llm = LLMService(api_key, base_url, model)
-        self.kg = WikidataKG()
-        self.root = None
-
-    def run(self, complex_question_data: Dict):
-        question = complex_question_data['complex_question']
-        print(f"\n{'=' * 60}\nUser Query: {question}\n{'=' * 60}")
-
-        self.root = ThoughtNode("root", {"text": question})
-
-        # =================================================================
-        # [Layer 1] Decomposition
-        # =================================================================
-        print("\n[Layer 1] Decomposition (Generating Sub-thoughts)...")
-        sub_constraints = self.llm.decompose_query(question)
-
-        # 1. 提取所有 Anchors 和 Filters
-        anchor_items = [item for item in sub_constraints if item['role'] == 'anchor']
-        raw_filters = [item for item in sub_constraints if item['role'] != 'anchor']
-
-        if not anchor_items:
-            print("Error: No valid anchors found.")
-            return
-
-        final_anchors_config = []  # 用于存储处理好的 Anchor 配置 (QID + Path)
-        sample_qid = None  # 用于学习 Schema 的样本
-
-        # =================================================================
-        # [Layer 1.5] Multi-Anchor Path Finding (Parallel Processing)
-        # =================================================================
-        print(f"\n[Layer 1.5] Processing {len(anchor_items)} Anchors in Parallel...")
-
-        for idx, anchor_data in enumerate(anchor_items):
-            print(f"\n  --- Processing Anchor {idx + 1}: {anchor_data['value']} ---")
-
-            # A. Entity Linking
-            qid = self.kg.search_entity_id(anchor_data['value'])
-            if not qid:
-                print(f"    [Skip] Could not link entity '{anchor_data['value']}'")
-                continue
-            print(f"    -> Linked: {qid}")
-
-            # B. Path Finding (Probing)
-            # 探测这个实体和“答案”之间的关系
-            candidate_relations = self.kg.get_candidate_relations(qid)
-            if not candidate_relations:
-                print("    [Error] Isolated node.")
-                continue
-
-            # C. Selection (让 LLM 选择最佳路径)
-            # Prompt 会根据 Anchor 和问题上下文选择，比如对于导演选 P57，对于演员选 P161
-            selected_path = self.llm.select_best_path(question, anchor_data['value'], candidate_relations)
-            rel_pid = selected_path.get('pid')
-            rel_dir = selected_path.get('direction')
-            print(f"    -> Path Selected: {rel_pid} ({rel_dir})")
-
-            # D. 保存配置
-            final_anchors_config.append({
-                'qid': qid,
-                'pid': rel_pid,
-                'direction': rel_dir,
-                'role': 'anchor',
-                'name': anchor_data['value']
-            })
-
-            # E. Sampling (只需要做一次，或者直到成功为止)
-            # 我们只需要一个样本来学习“电影”这个类别的 Schema，不需要每个 Anchor 都采样一次
-            if not sample_qid:
-                if rel_dir == 'reverse':
-                    query = f"SELECT ?item WHERE {{ ?item wdt:{rel_pid} wd:{qid} }} LIMIT 1"
-                else:
-                    query = f"SELECT ?item WHERE {{ wd:{qid} wdt:{rel_pid} ?item }} LIMIT 1"
-
-                res = self.kg.execute_query(query)
-                if res and "entity" in res[0]['item']['value']:
-                    sample_qid = res[0]['item']['value'].split('/')[-1]
-                    print(f"    -> Sampling Success: Found sample instance {sample_qid}")
-
-        if not final_anchors_config:
-            print("Error: All anchors failed to link or find paths.")
-            return
-
-
-        # =================================================================
-        # [Layer 2] Alignment (Mapping Filters to Sample Schema)
-        # =================================================================
-        print("\n[Layer 2] Alignment (Mapping Filters to Sample Schema)...")
-
-        # 1. 获取 Sample 的属性列表
-        schema_context = self._fetch_available_properties(sample_qid)
-
-        # 2. [修复版] 对 Filter 中的 Value 做实体链接
-        # 逻辑修改：只有当 Value 是字符串，且不像日期、不像浮点数时，才去搜 QID
-        for item in raw_filters:
-            val = item.get('value')
-            if isinstance(val, str):
-                # 排除纯数字
-                if val.isdigit():
-                    continue
-                # 排除浮点数 (e.g., "1.86")
-                if re.match(r'^\d+\.\d+$', val):
-                    continue
-                # 排除日期格式 (YYYY-MM-DD)
-                if re.match(r'^\d{4}-\d{2}-\d{2}$', val):
-                    continue
-
-                # 只有剩下的（比如 "Documentary", "USA"）才去搜 ID
-                qid = self.kg.search_entity_id(val)
-                if qid:
-                    item['value_qid'] = qid
-
-        # 3. 对齐属性
-        aligned_filters = []
-        for raw_item in raw_filters:
-            aligned_content = self._generate_aligned_thought(raw_item, schema_context)
-            if aligned_content.get('pid'):
-                aligned_filters.append(aligned_content)
-                val_disp = aligned_content.get('value_qid') or aligned_content.get('value')
-                print(f"  -> Filter: '{raw_item['key']}' => '{aligned_content.get('pid')}' (Value: {val_disp})")
-            else:
-                print(f"  [Warning] Dropping filter '{raw_item['key']}'")
-
-        # =================================================================
-        # [Layer 3] Aggregation (Constructing SPARQL)
-        # =================================================================
-        print("\n[Layer 3] Aggregation (Intersection of all constraints)...")
-
-        # wikidata_service.py 里的 construct_sparql_from_got 已经支持传入 anchor 列表
-        # 它会生成多个 ?item wdt:Px wd:Anchor 语句，天然构成了 AND 逻辑 (Intersection)
-
-        sparql_query = self.kg.construct_sparql_from_got(final_anchors_config, aligned_filters)
-        print(f"  [Aggregated Query]:\n{sparql_query}")
-
-        # 执行查询
-        results = self.kg.execute_query(sparql_query)
-        final_entities = self._parse_results(results)
-        print(f"  => Found {len(final_entities)} results.")
-
-        # [新增] 增强数据：将 Anchors 信息注入到每个结果中
-        # 因为 SPARQL 是 AND 逻辑，所以查出来的结果一定满足所有 Anchor 条件
-        enriched_data = []
-        for entity in final_entities:
-            # 1. 基础信息
-            context_str = f"Entity: {entity.get('name')} ({entity.get('id')})\n"
-            context_str += f"Description: {entity.get('description', 'N/A')}\n"
-
-            # 2. 属性证据 (Filters) - 这里只有日期等
-            context_str += "Matched Attributes:\n"
-            for k, v in entity.get('attributes', {}).items():
-                context_str += f"  - {k}: {v}\n"
-
-            context_str += "Verified Relationships (Anchors):\n"
-            for anchor in final_anchors_config:
-                role = anchor.get('name')
-                pid = anchor.get('pid', 'Unknown Relation')
-                context_str += f"  - Connected to: {role} (via {pid})\n"
-
-            enriched_data.append(context_str)
-
-        # 4. 组装最终 Prompt
-        final_context = "\n---\n".join(enriched_data[:5])
-
-        # 生成最终答案
-        # [修改] 这里的 Prompt 稍微改一下，强调使用提供的 Evidence
-        system_prompt = "You are a Knowledge Graph QA assistant. Synthesize the answer based strictly on the provided Evidence."
-        user_prompt = f"""
-            Question: {question}
-
-            Evidence Retrieved from Knowledge Graph:
-            {final_context}
-
-            Final Answer:
-            """
-
-        ans = self.llm.chat(system_prompt, user_prompt, json_mode=False)
-        print(f"\n[Final Answer]: {ans}")
-
-    def _parse_results(self, raw_results):
-        """
-        将 SPARQL 返回结果解析为字典，包含所有“证据变量”。
-        """
-        parsed = []
-        for row in raw_results:
-            entity = {}
-            evidence = {}
-
-            # 1. 提取核心 Item 信息
-            if 'item' in row:
-                entity['uri'] = row['item']['value']
-                entity['id'] = entity['uri'].split('/')[-1]
-            if 'itemLabel' in row:
-                entity['name'] = row['itemLabel']['value']
-
-            # [新增] 提取描述信息，非常有助于 LLM 理解这是个电影还是书，还是人
-            if 'itemDescription' in row:
-                entity['description'] = row['itemDescription']['value']
-
-            # 2. 提取 Filter 产生的证据 (Evidence)
-            for key, val in row.items():
-                # [修改] 排除列表增加 itemDescription
-                if key not in ['item', 'itemLabel', 'itemDescription']:
-                    readable_key = key.rsplit('_', 1)[0] if '_' in key else key
-                    # 如果是日期，截取前10位看起来更干净
-                    val_str = val['value']
-                    if "T00:00:00Z" in val_str:
-                        val_str = val_str.split('T')[0]
-                    evidence[readable_key] = val_str
-
-            if evidence:
-                entity['attributes'] = evidence  # 改个名字叫 attributes 更直观
-
-            parsed.append(entity)
-        print(parsed)
-        return parsed
-
-
-    # -------- 核心变换逻辑：生成思维 --------
-
-
-    def _generate_aligned_thought(self, raw_constraint: Dict, schema_context: Dict) -> Dict:
-        """
-        思维变换函数：T(Raw_Thought, Context) -> Aligned_Thought
-        优化版：强制 LLM 基于 Value 的语义来选择 Property，而不是盲信用户的 key。
-        """
-        # 如果已经是 PID 格式，直接返回
-        if raw_constraint['key'].startswith('P') and raw_constraint['key'][1:].isdigit():
-            raw_constraint['pid'] = raw_constraint['key']
-            return raw_constraint
-
-        # 构造 Context 描述
-        candidates_str = "\n".join([f"- {pid}: {label}" for pid, label in schema_context.items()])
-
-        # 获取 Value 的显示名称 (如果有 QID，说明已经链接了实体)
-        val_display = raw_constraint.get('value')
-        if raw_constraint.get('value_qid'):
-            # 这里我们只把 value_qid 给 LLM 参考，虽然它可能不知道 QID 具体是啥，
-            # 但我们主要依赖 raw_constraint['value'] 的文本 (如 "novel series") 来做判断
-            pass
-
-        prompt = f"""
-        You are a Semantic Alignment Expert for Knowledge Graphs.
-
-        Task: Map the User's Constraint to the correct Wikidata Property ID (PID) from the provided Schema.
-
-        User Constraint:
-        - Attribute Name (User Guess): "{raw_constraint['key']}"
-        - Value: "{val_display}"
-        - Operator: {raw_constraint['op']}
-
-        Available KG Properties (Schema from a similar item):
-        {candidates_str}
-
-        CRITICAL RULES:
-        1. Ignore the "Attribute Name" if it conflicts with how the "Value" is typically used in Wikidata.
-        2. "Novel series", "Film", "Book" are usually values for P31 (instance of).
-        3. "Horror", "Comedy", "Fiction" are usually values for P136 (genre).
-        4. "USA", "France" are usually values for P17 (country) or P495 (country of origin).
-        5. Dates (1990, 2020) are usually P577 (publication date).
-
-        Decision Logic:
-        - Does "{val_display}" look like a Genre (P136) or a Type/Category (P31)?
-        - Does it look like a Date (P577)?
-
-        Return JSON: {{"reasoning": "why you chose this PID", "pid": "Pxxx"}}
-        """
-
-        response = self.llm.chat("You are a smart ontology mapper.", prompt)
-
-        try:
-            result = json.loads(response)
-            new_thought = raw_constraint.copy()
-
-            # 更新 PID
-            selected_pid = result.get('pid')
-
-            # 如果 LLM 没选出来，或者是瞎编的 PID (不在 schema 里)，我们要小心
-            # 但有时候 Schema 不全，允许 LLM 预测常见的 P31/P136
-            if selected_pid:
-                new_thought['key'] = selected_pid
-                new_thought['pid'] = selected_pid
-                print(
-                    f"    [Align Logic] Mapped '{raw_constraint['key']}' ({val_display}) -> {selected_pid}. Reason: {result.get('reasoning', 'None')}")
-            else:
-                print(f"    [Align Warning] LLM did not return a PID for {raw_constraint['key']}")
-
-            return new_thought
-        except Exception as e:
-            print(f"  [Error] Alignment failed: {e}")
-            return raw_constraint
-
-    # -------- 辅助方法 (Helpers) --------
-
-    def _fetch_available_properties(self, sample_qid):
-        if not sample_qid: return {}
-
-        # 增加 skos:altLabel 获取别名
-        query = f"""
-        SELECT DISTINCT ?p ?pLabel (GROUP_CONCAT(DISTINCT ?altLabel; separator=", ") AS ?aliases) ?valLabel WHERE {{
-          wd:{sample_qid} ?p ?val .
-          ?prop wikibase:directClaim ?p .
-
-          # 获取 Label
-          SERVICE wikibase:label {{ bd:serviceParam wikibase:language "en". }}
-          ?prop rdfs:label ?pLabel .
-          FILTER(LANG(?pLabel) = "en")
-
-          # 获取 Aliases (可选)
-          OPTIONAL {{ 
-            ?prop skos:altLabel ?altLabel . 
-            FILTER(LANG(?altLabel) = "en") 
-          }}
-
-          # 获取值的示例 (用于辅助判断类型)
-          OPTIONAL {{ 
-            ?val rdfs:label ?valLabel . 
-            FILTER(LANG(?valLabel) = "en") 
-          }}
-        }} 
-        GROUP BY ?p ?pLabel ?valLabel
-        LIMIT 500
-        """
-        res = self.kg.execute_query(query)
-        schema = {}
-
-        ignore_keywords = ["ID", "identifier", "code", "number"]
-
-        for r in res:
-            pid = r['p']['value'].split('/')[-1]
-            p_label = r.get('pLabel', {}).get('value', 'Unknown')
-            aliases = r.get('aliases', {}).get('value', '')
-            val_example = r.get('valLabel', {}).get('value', '')
-
-            # 简单的过滤
-            if any(k in p_label for k in ignore_keywords) and "tax" not in p_label:
-                continue
-
-            if pid not in schema:
-                # 构造更丰富的描述： "duration (Aliases: runtime, length) [Example: 120]"
-                desc = f"Label: {p_label}"
-                if aliases:
-                    desc += f" | Aliases: {aliases}"
-                if val_example:
-                    desc += f" | Example Value: {val_example}"
-
-                schema[pid] = desc
-        return schema
-
-
-# ==========================================
-# 运行脚本
-# ==========================================
-if __name__ == "__main__":
-    # 1. 配置 API 信息
-    API_KEY = "sk-iedkedhtzkamboikwwoamudadmxmuwvrxwovbedjzvcycqda"  # 填入你的真实 Key
-    BASE_URL = "https://api.siliconflow.cn/v1/"  # 或者 OpenAI 的地址
-    MODEL_NAME = "deepseek-ai/DeepSeek-V3.2"
-
-    # 2. 指定数据集路径 (请根据你本地实际路径修改)
-    DATASET_PATH = "D:\GitHub\CCSP\datasets\complex_constraint_dataset_rewrite_queries.json"
-
-    # 检查 Key 是否填入
-    if not API_KEY or API_KEY == "sk-...":
-        print("错误：请先在代码中填入有效的 API Key 和 Base URL。")
-        exit()
-
-    # 3. 初始化引擎 (只初始化一次，复用连接)
-    engine = GoTEngine(api_key=API_KEY, base_url=BASE_URL, model=MODEL_NAME)
+        results = self.service.execute_sparql(sparql)
+
+        entities = []
+        for r in results:
+            url = r['item']['value']
+            qid = url.split("/")[-1]
+            label = r.get('itemLabel', {}).get('value', 'Unknown')
+            entities.append({"id": qid, "label": label})
+
+        return entities
+
+
+def generate_final_response(user_query: str, execution_result: Dict, llm: LLMService):
+    """
+    框架第 7 步：基于答案和证据生成最终回复。
+    """
+    logger.info("Phase 3: Generating Final Answer with LLM...")
+
+    entities = execution_result["final_entities"]
+    trace = execution_result["trace"]
+
+    # 1. 格式化证据 (Evidence)
+    trace_str = "\n".join(trace)
+
+    # 2. 格式化答案 (Answers)
+    if not entities:
+        answer_str = "No specific entities were found matching all constraints."
+    else:
+        answer_str = ", ".join([f"{e['label']} ({e['id']})" for e in entities])
+
+    # 3. 构建 Prompt
+    prompt = f"""
+    Role: You are an intelligent Knowledge Graph Question Answering Assistant.
+
+    User Question: "{user_query}"
+
+    System Execution Trace (Evidence of how the answer was found):
+    {trace_str}
+
+    Final Retrieved Entities from Knowledge Graph:
+    {answer_str}
+
+    Task: 
+    Based ONLY on the provided evidence and retrieved entities, answer the user's question naturally. 
+    1. Direct Answer: State the answer clearly.
+    2. Explanation: Briefly explain the reasoning path (e.g., "We started by looking for... then filtered by...").
+    3. If no results were found, explain which constraints might have been too strict based on the trace.
+    """
+
+    # 4. 调用 LLM
+    final_response = llm.generate_text(prompt)
+
+    print("\n" + "=" * 50)
+    print("🤖 Final LLM Response:")
+    print("=" * 50)
+    print(final_response)
+    print("=" * 50)
+
+# ==============================================================================
+# 4. 主流程
+# ==============================================================================
+def main():
+    print("=== CCSP Framework: Graph of Thoughts Execution ===\n")
+
+    # 配置 API (请从环境变量或直接填入)
+    api_key = os.getenv("LLM_API_KEY", "sk-wZPm2CCFydnh7Nuh9vuaMBLYiJxBxP0MsIMwp6rGZ87JVzkF")
+    base_url = os.getenv("LLM_BASE_URL", "https://api.chatanywhere.tech/v1")
+    model = "gpt-3.5-turbo"
+
+    llm = LLMService(api_key, base_url,model)
+    wiki_service = WikidataService()
+
     try:
-        # 4. 读取数据集
-        print(f"正在加载数据集: {DATASET_PATH} ...")
-        with open(DATASET_PATH, 'r', encoding='utf-8') as f:
-            dataset = json.load(f)
+        optimizer = ConstraintOptimizer("property_metadata_final.json", llm)
+        logger.info("Optimizer loaded.")
+    except Exception as e:
+        logger.error(f"Init failed: {e}")
+        return
 
-        print(f"成功加载 {len(dataset)} 条数据。开始执行...")
+    # 示例查询
+    user_query = "Which film starring Chester Bennington and directed by Kevin Greutert was released after 1995, is a horror film, and has a runtime shorter than 109.5 minutes?"
+    print(f"Query: {user_query}\n")
 
-        # 5. 循环处理
-        # 你可以使用 dataset[:5] 来先测试前5条，跑通后再去掉切片跑全量
-        for i, item in enumerate(dataset[:1]):
-            print(f"\n{'#' * 60}")
-            print(f"进度: {i + 1}/{len(dataset)}")
-            print(f"{'#' * 60}")
-            try:
-                # 调用引擎处理单条数据
-                engine.run(item)
+    # 1. Parsing
+    constraints = parse_query_to_constraints(user_query, llm)
+    if not constraints: return
 
-            except Exception as e:
-                print(f"[Error] 处理第 {i + 1} 条数据时发生错误: {e}")
-                # 继续处理下一条，不要因为一条报错就停止整个程序
-                continue
+    # 2. Optimization (Planning)
+    sorted_constraints = optimizer.optimize(constraints)
 
-    except FileNotFoundError:
-        print(f"错误：找不到文件 {DATASET_PATH}。请检查路径是否正确。")
-    except json.JSONDecodeError:
-        print(f"错误：文件 {DATASET_PATH} 不是有效的 JSON 格式。")
+    print("\n--- Execution Plan ---")
+    for i, c in enumerate(sorted_constraints):
+        print(f"Step {i + 1}: {c.property_label} = {c.value} (Score: {c.priority_score:.2f})")
+
+    # 3. Execution (Graph Reasoning)
+    engine = GraphReasoningExecutor(wiki_service)
+
+    # === 修改点：获取返回结果，而不是只打印 ===
+    execution_result = engine.execute(sorted_constraints)
+
+    # 4. Final Generation (Step 7)
+    # 把所有上下文送给 LLM 做总结
+    generate_final_response(user_query, execution_result, llm)
+
+
+if __name__ == "__main__":
+    main()
