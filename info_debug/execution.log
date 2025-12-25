@@ -1,0 +1,176 @@
+2025-12-25 15:14:07,342 - CCSP-AgentLauncher - INFO - Infrastructure initialized.
+2025-12-25 15:14:07,342 - CCSP-AgentLauncher - INFO - Phase 1: Parsing natural language to constraints...
+2025-12-25 15:14:07,638 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-3b65ed98-2812-4f63-b8e0-6708819779a8', 'json_data': {'messages': [{'role': 'user', 'content': '\n        Role: You are a Knowledge Graph Query Parser.\n        Task: Convert the user\'s question into structured constraints.\n\n        User Query: "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"\n\n        Requirements:\n        1. Identify atomic constraints.\n        2. Property ID: Predict P-ID if sure (e.g. P57), else empty.\n        3. Value: \n           - **Entity**: Output the English Name (e.g. "Chester Bennington").\n           - **Quantity/Number**: Output ONLY the number, REMOVE units. (e.g. "109.5 minutes" -> "109.5").\n           - **Date**: Format as YYYY or YYYY-MM-DD.\n        4. Operator: =, >, <, contains.\n\n        IMPORTANT Output Format:\n        Return a JSON Object with a single key "constraints" containing the list.\n        Example:\n        {\n            "constraints": [\n                { "id": "c1", "property_id": "Pxx", "property_label": "...", "operator": "=", "value": "...", "softness": 0.0 }\n            ]\n        }\n    '}], 'model': 'deepseek-ai/DeepSeek-V3.2', 'response_format': {'type': 'json_object'}, 'temperature': 0.1}}
+2025-12-25 15:14:07,653 - openai._base_client - DEBUG - Sending HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions
+2025-12-25 15:14:07,653 - httpcore.connection - DEBUG - connect_tcp.started host='127.0.0.1' port=7890 local_address=None timeout=5.0 socket_options=None
+2025-12-25 15:14:07,654 - httpcore.connection - DEBUG - connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000207D942D750>
+2025-12-25 15:14:07,654 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'CONNECT']>
+2025-12-25 15:14:07,654 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:07,654 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'CONNECT']>
+2025-12-25 15:14:07,654 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:07,654 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'CONNECT']>
+2025-12-25 15:14:07,655 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'Connection established', [])
+2025-12-25 15:14:07,655 - httpcore.proxy - DEBUG - start_tls.started ssl_context=<ssl.SSLContext object at 0x00000207D7758320> server_hostname='api.siliconflow.cn' timeout=5.0
+2025-12-25 15:14:07,725 - httpcore.proxy - DEBUG - start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x00000207D942BB90>
+2025-12-25 15:14:07,725 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:07,726 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:07,726 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-12-25 15:14:07,726 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:07,726 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:08,253 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 503, b'Service Unavailable', [(b'Date', b'Thu, 25 Dec 2025 07:14:11 GMT'), (b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'86'), (b'Connection', b'keep-alive'), (b'X-Siliconcloud-Trace-Id', b'ti_t0lz4o97bpk6ri07u0')])
+2025-12-25 15:14:08,254 - httpx - INFO - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-12-25 15:14:08,254 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-12-25 15:14:08,254 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-12-25 15:14:08,254 - httpcore.http11 - DEBUG - response_closed.started
+2025-12-25 15:14:08,254 - httpcore.http11 - DEBUG - response_closed.complete
+2025-12-25 15:14:08,254 - openai._base_client - DEBUG - HTTP Response: POST https://api.siliconflow.cn/v1/chat/completions "503 Service Unavailable" Headers({'date': 'Thu, 25 Dec 2025 07:14:11 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '86', 'connection': 'keep-alive', 'x-siliconcloud-trace-id': 'ti_t0lz4o97bpk6ri07u0'})
+2025-12-25 15:14:08,254 - openai._base_client - DEBUG - request_id: None
+2025-12-25 15:14:08,255 - openai._base_client - DEBUG - Encountered httpx.HTTPStatusError
+Traceback (most recent call last):
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\openai\_base_client.py", line 1027, in request
+    response.raise_for_status()
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\httpx\_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '503 Service Unavailable' for url 'https://api.siliconflow.cn/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+2025-12-25 15:14:08,286 - openai._base_client - DEBUG - Retrying due to status code 503
+2025-12-25 15:14:08,286 - openai._base_client - DEBUG - 2 retries left
+2025-12-25 15:14:08,286 - openai._base_client - INFO - Retrying request to /chat/completions in 0.462089 seconds
+2025-12-25 15:14:08,749 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-3b65ed98-2812-4f63-b8e0-6708819779a8', 'json_data': {'messages': [{'role': 'user', 'content': '\n        Role: You are a Knowledge Graph Query Parser.\n        Task: Convert the user\'s question into structured constraints.\n\n        User Query: "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"\n\n        Requirements:\n        1. Identify atomic constraints.\n        2. Property ID: Predict P-ID if sure (e.g. P57), else empty.\n        3. Value: \n           - **Entity**: Output the English Name (e.g. "Chester Bennington").\n           - **Quantity/Number**: Output ONLY the number, REMOVE units. (e.g. "109.5 minutes" -> "109.5").\n           - **Date**: Format as YYYY or YYYY-MM-DD.\n        4. Operator: =, >, <, contains.\n\n        IMPORTANT Output Format:\n        Return a JSON Object with a single key "constraints" containing the list.\n        Example:\n        {\n            "constraints": [\n                { "id": "c1", "property_id": "Pxx", "property_label": "...", "operator": "=", "value": "...", "softness": 0.0 }\n            ]\n        }\n    '}], 'model': 'deepseek-ai/DeepSeek-V3.2', 'response_format': {'type': 'json_object'}, 'temperature': 0.1}}
+2025-12-25 15:14:08,749 - openai._base_client - DEBUG - Sending HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions
+2025-12-25 15:14:08,749 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:08,749 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:08,750 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-12-25 15:14:08,750 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:08,750 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:36,189 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 25 Dec 2025 07:14:38 GMT'), (b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'1630'), (b'Connection', b'keep-alive'), (b'X-Siliconcloud-Trace-Id', b'ti_80xvtl1khsttuq6b6j')])
+2025-12-25 15:14:36,189 - httpx - INFO - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-25 15:14:36,190 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-12-25 15:14:36,190 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-12-25 15:14:36,190 - httpcore.http11 - DEBUG - response_closed.started
+2025-12-25 15:14:36,190 - httpcore.http11 - DEBUG - response_closed.complete
+2025-12-25 15:14:36,190 - openai._base_client - DEBUG - HTTP Response: POST https://api.siliconflow.cn/v1/chat/completions "200 OK" Headers({'date': 'Thu, 25 Dec 2025 07:14:38 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '1630', 'connection': 'keep-alive', 'x-siliconcloud-trace-id': 'ti_80xvtl1khsttuq6b6j'})
+2025-12-25 15:14:36,190 - openai._base_client - DEBUG - request_id: None
+2025-12-25 15:14:36,195 - CCSP-AgentLauncher - INFO - DEBUG: Raw Parsed JSON: {"constraints": [{"id": "c1", "property_id": "P21", "property_label": "sex or gender", "operator": "=", "value": "male", "softness": 0.0}, {"id": "c2", "property_id": "P106", "property_label": "occupation", "operator": "=", "value": "poet", "softness": 0.0}, {"id": "c3", "property_id": "P569", "property_label": "date of birth", "operator": ">", "value": "1683", "softness": 0.0}, {"id": "c4", "property_id": "P570", "property_label": "date of death", "operator": "<", "value": "1826", "softness": 0.0}, {"id": "c5", "property_id": "P737", "property_label": "influenced by", "operator": "=", "value": "Charles Dickens", "softness": 0.0}]}
+2025-12-25 15:14:36,200 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.wikidata.org:443
+2025-12-25 15:14:37,055 - urllib3.connectionpool - DEBUG - https://www.wikidata.org:443 "GET /w/api.php?action=wbsearchentities&search=male&language=en&format=json&limit=1 HTTP/1.1" 200 334
+2025-12-25 15:14:37,057 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.wikidata.org:443
+2025-12-25 15:14:37,910 - urllib3.connectionpool - DEBUG - https://www.wikidata.org:443 "GET /w/api.php?action=wbsearchentities&search=poet&language=en&format=json&limit=1 HTTP/1.1" 200 253
+2025-12-25 15:14:37,912 - urllib3.connectionpool - DEBUG - Starting new HTTPS connection (1): www.wikidata.org:443
+2025-12-25 15:14:38,791 - urllib3.connectionpool - DEBUG - https://www.wikidata.org:443 "GET /w/api.php?action=wbsearchentities&search=Charles+Dickens&language=en&format=json&limit=1 HTTP/1.1" 200 287
+2025-12-25 15:14:38,793 - optimizer - DEBUG - Scored sex or gender: 0.000 (base_s=0.00)
+2025-12-25 15:14:38,793 - optimizer - DEBUG - Scored occupation: 0.000 (base_s=0.00)
+2025-12-25 15:14:38,793 - optimizer - INFO - Penalty: Range operator '>' on 'date of birth'.
+2025-12-25 15:14:38,793 - optimizer - DEBUG - Scored date of birth: 0.000 (base_s=0.00)
+2025-12-25 15:14:38,793 - optimizer - INFO - Penalty: Range operator '<' on 'date of death'.
+2025-12-25 15:14:38,793 - optimizer - DEBUG - Scored date of death: 0.000 (base_s=0.00)
+2025-12-25 15:14:38,793 - optimizer - DEBUG - Scored influenced by: 0.000 (base_s=0.00)
+2025-12-25 15:14:38,793 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d2180a65-0935-4bd6-91e9-7f290f777574', 'json_data': {'messages': [{'role': 'user', 'content': '\n        Role: You are an autonomous Graph of Thoughts Agent.\n        Goal: Find the entity that satisfies ALL user constraints.\n\n        User Query: "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"\n\n        === Constraint Definitions (Reference) ===\n        - c1: sex or gender = Q6581097\n- c2: occupation = Q49757\n- c3: date of birth > 1683\n- c4: date of death < 1826\n- c5: influenced by = Q5686\n\n        === Current Graph State (History) ===\n        Current Graph State:\n  - [root] Start: Found 0 entities. (Root)\n\n\n        === Statistical Critic Advice ===\n        Statistical Critic Suggestions:\n  1. Recommended Starting Point (Anchor): \'sex or gender\' (Score: 0.00). High selectivity.\n\n\n        === Decision Instructions ===\n        1. **ANALYZE HISTORY**: Look at the "Current Graph State". Which constraints have ALREADY been applied?\n        2. **CHECK COMPLETION**: \n           - Do the current remaining candidates satisfy ALL "Constraint Definitions"? \n           - If you have 1-5 candidates left and you have applied all necessary filters, output "FINISH".\n        3. **AVOID LOOPS**: Do NOT apply a constraint (FILTER/SEARCH) if it has already been applied in the current path.\n        4. **NEXT STEP**: If constraints remain unfulfilled, choose the best one based on the Critic\'s advice.\n\n        Available Actions:\n        1. SEARCH_ANCHOR(constraint_id): Start a new search path (Only if no good path exists).\n        2. FILTER(parent_node_id, constraint_id): Apply a constraint to narrow down results.\n        3. INTERSECT(node_id_1, node_id_2): Intersect two sets of candidates.\n        4. FINISH(final_node_id): Return the final answer.\n\n        Output JSON:\n        {\n            "reasoning": "Step-by-step reasoning: 1. I see constraints A, B, C are done. 2. Candidate count is X. 3. Therefore I will...",\n            "action": "ACTION_NAME",\n            "params": { ... }\n        }\n        '}], 'model': 'deepseek-ai/DeepSeek-V3.2', 'response_format': {'type': 'json_object'}, 'temperature': 0.1}}
+2025-12-25 15:14:38,794 - openai._base_client - DEBUG - Sending HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions
+2025-12-25 15:14:38,794 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:38,794 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:38,794 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-12-25 15:14:38,794 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:38,794 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:39,272 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 503, b'Service Unavailable', [(b'Date', b'Thu, 25 Dec 2025 07:14:42 GMT'), (b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'86'), (b'Connection', b'keep-alive'), (b'X-Siliconcloud-Trace-Id', b'ti_tib7tv07h6q2y61wjm')])
+2025-12-25 15:14:39,272 - httpx - INFO - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-12-25 15:14:39,272 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-12-25 15:14:39,272 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-12-25 15:14:39,272 - httpcore.http11 - DEBUG - response_closed.started
+2025-12-25 15:14:39,272 - httpcore.http11 - DEBUG - response_closed.complete
+2025-12-25 15:14:39,272 - openai._base_client - DEBUG - HTTP Response: POST https://api.siliconflow.cn/v1/chat/completions "503 Service Unavailable" Headers({'date': 'Thu, 25 Dec 2025 07:14:42 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '86', 'connection': 'keep-alive', 'x-siliconcloud-trace-id': 'ti_tib7tv07h6q2y61wjm'})
+2025-12-25 15:14:39,272 - openai._base_client - DEBUG - request_id: None
+2025-12-25 15:14:39,272 - openai._base_client - DEBUG - Encountered httpx.HTTPStatusError
+Traceback (most recent call last):
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\openai\_base_client.py", line 1027, in request
+    response.raise_for_status()
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\httpx\_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '503 Service Unavailable' for url 'https://api.siliconflow.cn/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+2025-12-25 15:14:39,273 - openai._base_client - DEBUG - Retrying due to status code 503
+2025-12-25 15:14:39,273 - openai._base_client - DEBUG - 2 retries left
+2025-12-25 15:14:39,273 - openai._base_client - INFO - Retrying request to /chat/completions in 0.413295 seconds
+2025-12-25 15:14:39,687 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d2180a65-0935-4bd6-91e9-7f290f777574', 'json_data': {'messages': [{'role': 'user', 'content': '\n        Role: You are an autonomous Graph of Thoughts Agent.\n        Goal: Find the entity that satisfies ALL user constraints.\n\n        User Query: "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"\n\n        === Constraint Definitions (Reference) ===\n        - c1: sex or gender = Q6581097\n- c2: occupation = Q49757\n- c3: date of birth > 1683\n- c4: date of death < 1826\n- c5: influenced by = Q5686\n\n        === Current Graph State (History) ===\n        Current Graph State:\n  - [root] Start: Found 0 entities. (Root)\n\n\n        === Statistical Critic Advice ===\n        Statistical Critic Suggestions:\n  1. Recommended Starting Point (Anchor): \'sex or gender\' (Score: 0.00). High selectivity.\n\n\n        === Decision Instructions ===\n        1. **ANALYZE HISTORY**: Look at the "Current Graph State". Which constraints have ALREADY been applied?\n        2. **CHECK COMPLETION**: \n           - Do the current remaining candidates satisfy ALL "Constraint Definitions"? \n           - If you have 1-5 candidates left and you have applied all necessary filters, output "FINISH".\n        3. **AVOID LOOPS**: Do NOT apply a constraint (FILTER/SEARCH) if it has already been applied in the current path.\n        4. **NEXT STEP**: If constraints remain unfulfilled, choose the best one based on the Critic\'s advice.\n\n        Available Actions:\n        1. SEARCH_ANCHOR(constraint_id): Start a new search path (Only if no good path exists).\n        2. FILTER(parent_node_id, constraint_id): Apply a constraint to narrow down results.\n        3. INTERSECT(node_id_1, node_id_2): Intersect two sets of candidates.\n        4. FINISH(final_node_id): Return the final answer.\n\n        Output JSON:\n        {\n            "reasoning": "Step-by-step reasoning: 1. I see constraints A, B, C are done. 2. Candidate count is X. 3. Therefore I will...",\n            "action": "ACTION_NAME",\n            "params": { ... }\n        }\n        '}], 'model': 'deepseek-ai/DeepSeek-V3.2', 'response_format': {'type': 'json_object'}, 'temperature': 0.1}}
+2025-12-25 15:14:39,687 - openai._base_client - DEBUG - Sending HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions
+2025-12-25 15:14:39,687 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:39,687 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:39,688 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-12-25 15:14:39,688 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:39,688 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:40,246 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 503, b'Service Unavailable', [(b'Date', b'Thu, 25 Dec 2025 07:14:43 GMT'), (b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'86'), (b'Connection', b'keep-alive'), (b'X-Siliconcloud-Trace-Id', b'ti_garws4auu3gvcoj7j6')])
+2025-12-25 15:14:40,246 - httpx - INFO - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-12-25 15:14:40,246 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-12-25 15:14:40,246 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-12-25 15:14:40,246 - httpcore.http11 - DEBUG - response_closed.started
+2025-12-25 15:14:40,246 - httpcore.http11 - DEBUG - response_closed.complete
+2025-12-25 15:14:40,246 - openai._base_client - DEBUG - HTTP Response: POST https://api.siliconflow.cn/v1/chat/completions "503 Service Unavailable" Headers({'date': 'Thu, 25 Dec 2025 07:14:43 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '86', 'connection': 'keep-alive', 'x-siliconcloud-trace-id': 'ti_garws4auu3gvcoj7j6'})
+2025-12-25 15:14:40,246 - openai._base_client - DEBUG - request_id: None
+2025-12-25 15:14:40,246 - openai._base_client - DEBUG - Encountered httpx.HTTPStatusError
+Traceback (most recent call last):
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\openai\_base_client.py", line 1027, in request
+    response.raise_for_status()
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\httpx\_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '503 Service Unavailable' for url 'https://api.siliconflow.cn/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+2025-12-25 15:14:40,247 - openai._base_client - DEBUG - Retrying due to status code 503
+2025-12-25 15:14:40,247 - openai._base_client - DEBUG - 1 retry left
+2025-12-25 15:14:40,247 - openai._base_client - INFO - Retrying request to /chat/completions in 0.887987 seconds
+2025-12-25 15:14:41,136 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d2180a65-0935-4bd6-91e9-7f290f777574', 'json_data': {'messages': [{'role': 'user', 'content': '\n        Role: You are an autonomous Graph of Thoughts Agent.\n        Goal: Find the entity that satisfies ALL user constraints.\n\n        User Query: "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"\n\n        === Constraint Definitions (Reference) ===\n        - c1: sex or gender = Q6581097\n- c2: occupation = Q49757\n- c3: date of birth > 1683\n- c4: date of death < 1826\n- c5: influenced by = Q5686\n\n        === Current Graph State (History) ===\n        Current Graph State:\n  - [root] Start: Found 0 entities. (Root)\n\n\n        === Statistical Critic Advice ===\n        Statistical Critic Suggestions:\n  1. Recommended Starting Point (Anchor): \'sex or gender\' (Score: 0.00). High selectivity.\n\n\n        === Decision Instructions ===\n        1. **ANALYZE HISTORY**: Look at the "Current Graph State". Which constraints have ALREADY been applied?\n        2. **CHECK COMPLETION**: \n           - Do the current remaining candidates satisfy ALL "Constraint Definitions"? \n           - If you have 1-5 candidates left and you have applied all necessary filters, output "FINISH".\n        3. **AVOID LOOPS**: Do NOT apply a constraint (FILTER/SEARCH) if it has already been applied in the current path.\n        4. **NEXT STEP**: If constraints remain unfulfilled, choose the best one based on the Critic\'s advice.\n\n        Available Actions:\n        1. SEARCH_ANCHOR(constraint_id): Start a new search path (Only if no good path exists).\n        2. FILTER(parent_node_id, constraint_id): Apply a constraint to narrow down results.\n        3. INTERSECT(node_id_1, node_id_2): Intersect two sets of candidates.\n        4. FINISH(final_node_id): Return the final answer.\n\n        Output JSON:\n        {\n            "reasoning": "Step-by-step reasoning: 1. I see constraints A, B, C are done. 2. Candidate count is X. 3. Therefore I will...",\n            "action": "ACTION_NAME",\n            "params": { ... }\n        }\n        '}], 'model': 'deepseek-ai/DeepSeek-V3.2', 'response_format': {'type': 'json_object'}, 'temperature': 0.1}}
+2025-12-25 15:14:41,136 - openai._base_client - DEBUG - Sending HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions
+2025-12-25 15:14:41,136 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:41,136 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:41,136 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-12-25 15:14:41,137 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:41,137 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:52,924 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Thu, 25 Dec 2025 07:14:55 GMT'), (b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'884'), (b'Connection', b'keep-alive'), (b'X-Siliconcloud-Trace-Id', b'ti_vs4866ryzyr36rzzyz')])
+2025-12-25 15:14:52,924 - httpx - INFO - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 200 OK"
+2025-12-25 15:14:52,925 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-12-25 15:14:52,925 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-12-25 15:14:52,925 - httpcore.http11 - DEBUG - response_closed.started
+2025-12-25 15:14:52,925 - httpcore.http11 - DEBUG - response_closed.complete
+2025-12-25 15:14:52,925 - openai._base_client - DEBUG - HTTP Response: POST https://api.siliconflow.cn/v1/chat/completions "200 OK" Headers({'date': 'Thu, 25 Dec 2025 07:14:55 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '884', 'connection': 'keep-alive', 'x-siliconcloud-trace-id': 'ti_vs4866ryzyr36rzzyz'})
+2025-12-25 15:14:52,925 - openai._base_client - DEBUG - request_id: None
+2025-12-25 15:14:52,925 - environment - INFO - [Tool: Anchor] Searching sex or gender (ID: P21) = Q6581097
+2025-12-25 15:14:54,716 - environment - INFO -   -> Found 1000 candidates.
+2025-12-25 15:14:54,716 - optimizer - DEBUG - Scored sex or gender: 0.000 (base_s=0.00)
+2025-12-25 15:14:54,716 - optimizer - DEBUG - Scored occupation: 0.000 (base_s=0.00)
+2025-12-25 15:14:54,716 - optimizer - INFO - Penalty: Range operator '>' on 'date of birth'.
+2025-12-25 15:14:54,716 - optimizer - DEBUG - Scored date of birth: 0.000 (base_s=0.00)
+2025-12-25 15:14:54,716 - optimizer - INFO - Penalty: Range operator '<' on 'date of death'.
+2025-12-25 15:14:54,716 - optimizer - DEBUG - Scored date of death: 0.000 (base_s=0.00)
+2025-12-25 15:14:54,716 - optimizer - DEBUG - Scored influenced by: 0.000 (base_s=0.00)
+2025-12-25 15:14:54,717 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d9ec6c5e-797b-43f1-b8ef-c9ab546f66ca', 'json_data': {'messages': [{'role': 'user', 'content': '\n        Role: You are an autonomous Graph of Thoughts Agent.\n        Goal: Find the entity that satisfies ALL user constraints.\n\n        User Query: "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"\n\n        === Constraint Definitions (Reference) ===\n        - c1: sex or gender = Q6581097\n- c2: occupation = Q49757\n- c3: date of birth > 1683\n- c4: date of death < 1826\n- c5: influenced by = Q5686\n\n        === Current Graph State (History) ===\n        Current Graph State:\n  - [root] Start: Found 0 entities. (Root)\n  - [node_c1] Search sex or gender: Found 1000 entities. <- [\'root\']\n\n\n        === Statistical Critic Advice ===\n        Statistical Critic Suggestions:\n  1. Recommended Starting Point (Anchor): \'sex or gender\' (Score: 0.00). High selectivity.\n\n\n        === Decision Instructions ===\n        1. **ANALYZE HISTORY**: Look at the "Current Graph State". Which constraints have ALREADY been applied?\n        2. **CHECK COMPLETION**: \n           - Do the current remaining candidates satisfy ALL "Constraint Definitions"? \n           - If you have 1-5 candidates left and you have applied all necessary filters, output "FINISH".\n        3. **AVOID LOOPS**: Do NOT apply a constraint (FILTER/SEARCH) if it has already been applied in the current path.\n        4. **NEXT STEP**: If constraints remain unfulfilled, choose the best one based on the Critic\'s advice.\n\n        Available Actions:\n        1. SEARCH_ANCHOR(constraint_id): Start a new search path (Only if no good path exists).\n        2. FILTER(parent_node_id, constraint_id): Apply a constraint to narrow down results.\n        3. INTERSECT(node_id_1, node_id_2): Intersect two sets of candidates.\n        4. FINISH(final_node_id): Return the final answer.\n\n        Output JSON:\n        {\n            "reasoning": "Step-by-step reasoning: 1. I see constraints A, B, C are done. 2. Candidate count is X. 3. Therefore I will...",\n            "action": "ACTION_NAME",\n            "params": { ... }\n        }\n        '}], 'model': 'deepseek-ai/DeepSeek-V3.2', 'response_format': {'type': 'json_object'}, 'temperature': 0.1}}
+2025-12-25 15:14:54,717 - openai._base_client - DEBUG - Sending HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions
+2025-12-25 15:14:54,717 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:54,717 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:54,717 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-12-25 15:14:54,717 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:54,717 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:55,270 - httpcore.http11 - DEBUG - receive_response_headers.complete return_value=(b'HTTP/1.1', 503, b'Service Unavailable', [(b'Date', b'Thu, 25 Dec 2025 07:14:58 GMT'), (b'Content-Type', b'application/json; charset=utf-8'), (b'Content-Length', b'86'), (b'Connection', b'keep-alive'), (b'X-Siliconcloud-Trace-Id', b'ti_gdclzczlw7gi0ohp82')])
+2025-12-25 15:14:55,271 - httpx - INFO - HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions "HTTP/1.1 503 Service Unavailable"
+2025-12-25 15:14:55,271 - httpcore.http11 - DEBUG - receive_response_body.started request=<Request [b'POST']>
+2025-12-25 15:14:55,271 - httpcore.http11 - DEBUG - receive_response_body.complete
+2025-12-25 15:14:55,271 - httpcore.http11 - DEBUG - response_closed.started
+2025-12-25 15:14:55,271 - httpcore.http11 - DEBUG - response_closed.complete
+2025-12-25 15:14:55,271 - openai._base_client - DEBUG - HTTP Response: POST https://api.siliconflow.cn/v1/chat/completions "503 Service Unavailable" Headers({'date': 'Thu, 25 Dec 2025 07:14:58 GMT', 'content-type': 'application/json; charset=utf-8', 'content-length': '86', 'connection': 'keep-alive', 'x-siliconcloud-trace-id': 'ti_gdclzczlw7gi0ohp82'})
+2025-12-25 15:14:55,271 - openai._base_client - DEBUG - request_id: None
+2025-12-25 15:14:55,271 - openai._base_client - DEBUG - Encountered httpx.HTTPStatusError
+Traceback (most recent call last):
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\openai\_base_client.py", line 1027, in request
+    response.raise_for_status()
+  File "C:\Users\sugarfree\.conda\envs\ccsp\Lib\site-packages\httpx\_models.py", line 829, in raise_for_status
+    raise HTTPStatusError(message, request=request, response=self)
+httpx.HTTPStatusError: Server error '503 Service Unavailable' for url 'https://api.siliconflow.cn/v1/chat/completions'
+For more information check: https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/503
+2025-12-25 15:14:55,272 - openai._base_client - DEBUG - Retrying due to status code 503
+2025-12-25 15:14:55,272 - openai._base_client - DEBUG - 2 retries left
+2025-12-25 15:14:55,272 - openai._base_client - INFO - Retrying request to /chat/completions in 0.401480 seconds
+2025-12-25 15:14:55,675 - openai._base_client - DEBUG - Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'idempotency_key': 'stainless-python-retry-d9ec6c5e-797b-43f1-b8ef-c9ab546f66ca', 'json_data': {'messages': [{'role': 'user', 'content': '\n        Role: You are an autonomous Graph of Thoughts Agent.\n        Goal: Find the entity that satisfies ALL user constraints.\n\n        User Query: "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"\n\n        === Constraint Definitions (Reference) ===\n        - c1: sex or gender = Q6581097\n- c2: occupation = Q49757\n- c3: date of birth > 1683\n- c4: date of death < 1826\n- c5: influenced by = Q5686\n\n        === Current Graph State (History) ===\n        Current Graph State:\n  - [root] Start: Found 0 entities. (Root)\n  - [node_c1] Search sex or gender: Found 1000 entities. <- [\'root\']\n\n\n        === Statistical Critic Advice ===\n        Statistical Critic Suggestions:\n  1. Recommended Starting Point (Anchor): \'sex or gender\' (Score: 0.00). High selectivity.\n\n\n        === Decision Instructions ===\n        1. **ANALYZE HISTORY**: Look at the "Current Graph State". Which constraints have ALREADY been applied?\n        2. **CHECK COMPLETION**: \n           - Do the current remaining candidates satisfy ALL "Constraint Definitions"? \n           - If you have 1-5 candidates left and you have applied all necessary filters, output "FINISH".\n        3. **AVOID LOOPS**: Do NOT apply a constraint (FILTER/SEARCH) if it has already been applied in the current path.\n        4. **NEXT STEP**: If constraints remain unfulfilled, choose the best one based on the Critic\'s advice.\n\n        Available Actions:\n        1. SEARCH_ANCHOR(constraint_id): Start a new search path (Only if no good path exists).\n        2. FILTER(parent_node_id, constraint_id): Apply a constraint to narrow down results.\n        3. INTERSECT(node_id_1, node_id_2): Intersect two sets of candidates.\n        4. FINISH(final_node_id): Return the final answer.\n\n        Output JSON:\n        {\n            "reasoning": "Step-by-step reasoning: 1. I see constraints A, B, C are done. 2. Candidate count is X. 3. Therefore I will...",\n            "action": "ACTION_NAME",\n            "params": { ... }\n        }\n        '}], 'model': 'deepseek-ai/DeepSeek-V3.2', 'response_format': {'type': 'json_object'}, 'temperature': 0.1}}
+2025-12-25 15:14:55,675 - openai._base_client - DEBUG - Sending HTTP Request: POST https://api.siliconflow.cn/v1/chat/completions
+2025-12-25 15:14:55,675 - httpcore.http11 - DEBUG - send_request_headers.started request=<Request [b'POST']>
+2025-12-25 15:14:55,676 - httpcore.http11 - DEBUG - send_request_headers.complete
+2025-12-25 15:14:55,676 - httpcore.http11 - DEBUG - send_request_body.started request=<Request [b'POST']>
+2025-12-25 15:14:55,676 - httpcore.http11 - DEBUG - send_request_body.complete
+2025-12-25 15:14:55,676 - httpcore.http11 - DEBUG - receive_response_headers.started request=<Request [b'POST']>

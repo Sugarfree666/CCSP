@@ -7,7 +7,7 @@ from collections import Counter
 # ==========================================
 # 1. 配置区域
 # ==========================================
-INPUT_FILE = '../datasets/datasets.json'
+INPUT_FILE = '../datasets/data_with_attributes.json'
 OUTPUT_FILE = '../datasets/complex_constraint_dataset.json'
 
 TARGET_ANSWER_COUNT = 1  # 目标：唯一答案

@@ -12,7 +12,7 @@ os.environ["HF_ENDPOINT"] = "https://hf-mirror.com"
 os.environ["HF_TOKEN"] ="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"
 
 REPO_ID = "CleverThis/wikidata-truthy"
-SAMPLE_FILES_COUNT = 100  # 建议 50-100 个文件以覆盖长尾属性
+SAMPLE_FILES_COUNT =  1647 # 建议 50-100 个文件以覆盖长尾属性
 OUTPUT_FILE = "ccsp framework/property_metadata_final.json"
 # ===========================================
 
@@ -43,7 +43,7 @@ def run_pipeline():
 
     con = duckdb.connect()
     # SQL: 提取 Pxxx, 统计总数, 统计去重数
-    query = f"""
+    query = fr"""
     SELECT 
         regexp_extract(predicate, 'P\d+', 0) as pid,
         COUNT(*) as total_count,

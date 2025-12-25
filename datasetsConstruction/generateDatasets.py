@@ -4,7 +4,7 @@ from openai import OpenAI  # 确保安装了 openai 库: pip install openai
 
 # 配置你的 API (这里以 DeepSeek 或 OpenAI 为例，通用格式)
 client = OpenAI(
-    api_key="sk-wZPm2CCFydnh7Nuh9vuaMBLYiJxBxP0MsIMwp6rGZ87JVzkF",
+    api_key="sk-olxsNswN3LrJjFKOduxcUsn3LGiGUXPTz7X0v7uu5udabPrz",
 
     base_url="https://api.chatanywhere.tech"
 )
@@ -89,16 +89,20 @@ Output:
 
     try:
         response = client.chat.completions.create(
-            model="gpt-5-mini",  # 或者使用 deepseek-chat, gpt-3.5-turbo 等
+            model="gpt-4o-mini",
             messages=[
-                # 系统角色：负责“教”模型怎么做
                 {"role": "system", "content": system_instruction},
-                # 用户角色：负责“喂”当前的数据
                 {"role": "user", "content": user_input}
             ],
-            temperature=0.5,  # 稍微降低温度，保证逻辑转换的准确性
+            temperature=0.3,
         )
-        return response.choices[0].message.content.strip()
+        content = response.choices[0].message.content.strip()
+
+        # 简单的后处理：有时候模型会忍不住加引号
+        if content.startswith('"') and content.endswith('"'):
+            content = content[1:-1]
+
+        return content
     except Exception as e:
         print(f"Error calling API: {e}")
         return None

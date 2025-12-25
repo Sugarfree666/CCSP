@@ -23,6 +23,9 @@ class WikidataService:
         # Wikidata 强制要求设置 User-Agent，否则会返回 403 Forbidden
         sparql.addCustomHttpHeader("User-Agent", self.user_agent)
 
+        sparql.setMethod("POST")
+        sparql.setRequestMethod("postdirectly")
+
         for attempt in range(retries):
             try:
                 results = sparql.query().convert()
