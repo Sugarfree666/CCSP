@@ -1,44 +1,34 @@
-# critic.py
-from typing import List, Dict
+from typing import List
 from data_model import Constraint
-from optimizer import ConstraintOptimizer
-
 
 class StatisticalCritic:
-    """
-    评价器：利用 Optimizer 中的数学指标 (s, r, CR) 指导 LLM。
-    """
-
-    def __init__(self, optimizer: ConstraintOptimizer):
+    def __init__(self, optimizer):
         self.optimizer = optimizer
 
     def evaluate_constraints(self, constraints: List[Constraint]) -> str:
         """
-        分析待处理的约束，返回建议文本。
+        [Refactored] 基于探测到的真实行数生成建议
         """
-        # 1. 注入元数据 (复用 optimizer 逻辑)
+        # 确保已经探测过
+        if constraints and constraints[0].estimated_rows == -1:
+             constraints = self.optimizer.optimize(constraints)
+
+        advice = "Dynamic Probing Analysis:\n"
+
+        # 1. 最佳切入点
+        best = constraints[0]
+        if best.estimated_rows < 1000:
+            advice += f"  1. [STRONG ANCHOR] '{best.property_label}' is excellent. It yields only {best.estimated_rows} results.\n"
+        elif best.estimated_rows < 10000:
+            advice += f"  1. [ACCEPTABLE ANCHOR] '{best.property_label}' yields {best.estimated_rows} results. Use it if no better option.\n"
+        else:
+            advice += f"  1. [CAUTION] No highly selective anchor found. Best is '{best.property_label}' ({best.estimated_rows} rows).\n"
+
+        # 2. 警告信息
         for c in constraints:
-            self.optimizer._inject_metadata(c)
-            # 注意：此处也可选择性调用 _estimate_and_fuse (涉及 LLM 开销)
-            self.optimizer._calculate_priority(c)
-
-        # 2. 生成基于数学的建议
-        advice = "Statistical Critic Suggestions:\n"
-
-        # 策略 A: 推荐 Anchor
-        sorted_cons = sorted(constraints, key=lambda x: x.priority_score, reverse=True)
-        best = sorted_cons[0]
-        advice += f"  1. Recommended Starting Point (Anchor): '{best.property_label}' (Score: {best.priority_score:.2f}). High selectivity.\n"
-
-        # 策略 B: 警告低效操作
-        for c in sorted_cons:
-            if c.s_base < 0.1 and c.lambda_val > 0.5:
-                advice += f"  2. WARNING: '{c.property_label}' is very common (Low Selectivity). Avoid using it as a filter early on.\n"
-
-        # 策略 C: 识别软约束
-        soft_ones = [c for c in constraints if c.softness > 0.5]
-        if soft_ones:
-            labels = ", ".join([c.property_label for c in soft_ones])
-            advice += f"  3. Refinement Hint: If results are empty, consider relaxing: {labels}.\n"
+            if c.estimated_rows == 999_999_999:
+                advice += f"  - WARNING: '{c.property_label}' is too expensive or timed out. Apply as late as possible.\n"
+            elif c.estimated_rows > 100_000:
+                 advice += f"  - NOTE: '{c.property_label}' has {c.estimated_rows} results. Inefficient as a filter.\n"
 
         return advice

@@ -1,110 +1,121 @@
-# import json
-#
-# # 读取原始文件
-# with open('../datasets/data_with_attributes.json', 'r', encoding='utf-8') as f:
-#     data = json.load(f)  # data 是一个列表
-#
-# # 取前n个元素
-# n = 20  # 例如：取前3个元素
-# first_n_elements = data[:n]
-#
-# # 保存到新文件
-# with open('../datasets/datasets.json', 'w', encoding='utf-8') as f:
-#     json.dump(first_n_elements, f, indent=2, ensure_ascii=False)
-#
-# print(f"已保存前 {len(first_n_elements)} 个元素到 datasets.json")
-
-import os
+import json
 import requests
-from SPARQLWrapper import SPARQLWrapper, JSON
+import time
+
+# ================= 配置区域 =================
+# 如果您开启了 VPN，请在此处填写代理地址。
+# 常见的本地代理端口是 7890 (Clash) 或 10809 (v2ray)，请根据您的软件设置修改。
+# 如果不确定，可以在 VPN 软件的“设置”中查看 "HTTP Proxy" 端口。
+PROXIES = {
+    "http": "http://127.0.0.1:7890",
+    "https": "http://127.0.0.1:7890",
+}
+
+# Wikidata 强制要求 User-Agent，否则可能会拦截请求
+HEADERS = {
+    "User-Agent": "MyDatasetLabelFetcher/1.0 (contact: your_email@example.com)"
+}
 
 
-# ================= 配置区 =================
-# 如果你在国内无法直连 Wikidata，请取消下面两行的注释并修改端口
-# os.environ["http_proxy"] = "http://127.0.0.1:7890"
-# os.environ["https_proxy"] = "http://127.0.0.1:7890"
-# ==========================================
+# ===========================================
 
-def get_name_via_sparql(qid):
-    """
-    方法 1: 使用 SPARQL 查询 (最准确，和你主程序逻辑一致)
-    """
-    endpoint = "https://query.wikidata.org/sparql"
-    sparql = SPARQLWrapper(endpoint)
-    sparql.setReturnFormat(JSON)
-    # 必须设置 User-Agent
-    sparql.addCustomHttpHeader("User-Agent", "EntityVerifier/1.0 (test@gmail.com)")
+def fetch_wikidata_labels(qids):
+    base_url = "https://www.wikidata.org/w/api.php"
+    qid_to_label = {}
+    unique_qids = list(set(qids))
+    batch_size = 50
+    total_batches = (len(unique_qids) + batch_size - 1) // batch_size
 
-    query = f"""
-    SELECT ?label WHERE {{
-      wd:{qid} rdfs:label ?label .
-      FILTER(LANG(?label) = "en")
-    }}
-    """
+    print(f"正在获取 {len(unique_qids)} 个实体的标签，共 {total_batches} 批...")
 
+    for i in range(0, len(unique_qids), batch_size):
+        batch = unique_qids[i:i + batch_size]
+        ids_str = "|".join(batch)
+
+        params = {
+            "action": "wbgetentities",
+            "ids": ids_str,
+            "format": "json",
+            "props": "labels",
+            "languages": "en"
+        }
+
+        try:
+            # 加入 proxies 和 headers 参数
+            response = requests.get(base_url, params=params, headers=HEADERS, proxies=PROXIES, timeout=15)
+
+            # 尝试解析 JSON
+            try:
+                data = response.json()
+            except json.JSONDecodeError:
+                print(f"\n[错误] 第 {i // batch_size + 1} 批返回的不是 JSON 数据。")
+                print(f"返回内容片段: {response.text[:200]}...")  # 打印前200个字符用于调试
+                continue
+
+            if "entities" in data:
+                for qid, entity in data["entities"].items():
+                    if "labels" in entity and "en" in entity["labels"]:
+                        qid_to_label[qid] = entity["labels"]["en"]["value"]
+                    else:
+                        qid_to_label[qid] = qid
+
+            print(f"第 {i // batch_size + 1}/{total_batches} 批获取成功")
+
+        except requests.exceptions.ProxyError:
+            print(f"\n[错误] 代理连接失败。请检查 PROXIES 设置中的端口是否正确。")
+            break
+        except requests.exceptions.ConnectionError:
+            print(f"\n[错误] 网络连接失败。请确认 VPN 已开启且可以访问 Wikidata。")
+            break
+        except Exception as e:
+            print(f"第 {i // batch_size + 1} 批请求发生未知异常: {e}")
+
+        time.sleep(1)  # 增加延迟以保持稳定
+
+    return qid_to_label
+
+
+def add_answer_labels(input_file, output_file):
     try:
-        sparql.setQuery(query)
-        results = sparql.query().convert()
-        bindings = results["results"]["bindings"]
+        print(f"正在读取文件: {input_file}")
+        with open(input_file, 'r', encoding='utf-8') as f:
+            dataset = json.load(f)
+    except FileNotFoundError:
+        print(f"找不到文件: {input_file}，请确认路径是否正确。")
+        return
 
-        if bindings:
-            return bindings[0]["label"]["value"]
-        else:
-            return "Label not found (Entity might not have an English label)"
+    all_qids = []
+    for entry in dataset:
+        if "new_ground_truth" in entry:
+            for item in entry["new_ground_truth"]:
+                if isinstance(item, str) and item.startswith("Q"):
+                    all_qids.append(item)
 
-    except Exception as e:
-        return f"Error: {e}"
+    if not all_qids:
+        print("未找到任何以 Q 开头的 ID。")
+        return
 
+    label_map = fetch_wikidata_labels(all_qids)
 
-def get_name_via_api(qid):
-    """
-    方法 2: 使用 Wikidata API (轻量级，更快)
-    """
-    url = "https://www.wikidata.org/w/api.php"
-    params = {
-        "action": "wbgetentities",
-        "ids": qid,
-        "props": "labels",
-        "languages": "en",
-        "format": "json"
-    }
-    headers = {
-        "User-Agent": "EntityVerifier/1.0 (test@gmail.com)"
-    }
+    print("正在添加 answer_label 字段...")
+    for entry in dataset:
+        answer_labels = []
+        if "new_ground_truth" in entry:
+            for qid in entry["new_ground_truth"]:
+                label = label_map.get(qid, qid)
+                answer_labels.append(label)
+        entry["answer_label"] = answer_labels
 
-    try:
-        response = requests.get(url, params=params, headers=headers)
-        data = response.json()
+    with open(output_file, 'w', encoding='utf-8') as f:
+        json.dump(dataset, f, indent=2, ensure_ascii=False)
 
-        if "entities" in data and qid in data["entities"]:
-            entity = data["entities"][qid]
-            if "labels" in entity and "en" in entity["labels"]:
-                return entity["labels"]["en"]["value"]
-            else:
-                return "No English label found"
-        return "Entity ID not found"
-
-    except Exception as e:
-        return f"Error: {e}"
+    print(f"处理完成！新文件已保存为: {output_file}")
 
 
 if __name__ == "__main__":
-    while True:
-        print("\n" + "=" * 40)
-        qid_input = input("请输入实体ID (例如 Q7289900) 或输入 'q' 退出: ").strip()
-
-        if qid_input.lower() == 'q':
-            break
-
-        if not qid_input.startswith("Q") and not qid_input.startswith("P"):
-            print("格式错误：ID 必须以 Q 或 P 开头")
-            continue
-
-        print(f"\n正在查询 {qid_input} ...")
-
-        # 使用 API 方法查询 (速度快)
-        name = get_name_via_api(qid_input)
-        print(f"👉 实体名称: {name}")
-
-        # 也可以取消注释下面这行来测试 SPARQL 方法
-        # print(f"SPARQL 结果: {get_name_via_sparql(qid_input)}")
+    # 请确保路径正确，Windows路径建议使用原始字符串 r"..." 或双反斜杠 \\
+    # 输入文件路径 (您上传的文件名)
+    input_filename = 'D:\GitHub\CCSP\datasets\complex_constraint_dataset_rewrite_queries.json'
+    # 输出文件路径
+    output_filename = 'complex_constraint_dataset_with_labels.json'
+    add_answer_labels(input_filename, output_filename)

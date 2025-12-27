@@ -3,6 +3,7 @@ import json
 import logging
 import re
 import os
+from unit_utils import UnitNormalizer
 import requests
 from typing import List, Dict, Any, Set
 
@@ -20,6 +21,8 @@ from agent_brain import GoTAgent
 
 from openai import OpenAI
 
+os.makedirs("info_debug", exist_ok=True)
+LOG_FILE = os.path.join("info_debug", "execution.log")
 # ==============================================================================
 # [配置日志]
 # ==============================================================================
@@ -56,34 +59,6 @@ root_logger.addHandler(console_handler)
 
 logger = logging.getLogger("CCSP-AgentLauncher")
 
-
-# ==============================================================================
-# 1. 实体链接工具 (保留，因为 Parsing 阶段仍需要它)
-# ==============================================================================
-def search_wikidata(label: str) -> str:
-    """使用 Wikidata API 搜索实体的真实 QID。"""
-    url = "https://www.wikidata.org/w/api.php"
-    params = {
-        "action": "wbsearchentities",
-        "search": label,
-        "language": "en",
-        "format": "json",
-        "limit": 1
-    }
-    headers = {
-        "User-Agent": "CCSP-Bot/1.0 (Research Project - Educational Use)",
-        "Accept": "application/json"
-    }
-    try:
-        response = requests.get(url, params=params, headers=headers, timeout=5)
-        if response.status_code != 200:
-            return None
-        data = response.json()
-        if data.get("search"):
-            return data["search"][0]["id"]
-    except Exception as e:
-        logger.warning(f"[Entity Search] Failed for '{label}': {e}")
-    return None
 
 
 # ==============================================================================
@@ -131,35 +106,41 @@ class LLMService:
 # ==============================================================================
 # 3. Parsing (保留，作为 Agent 的任务输入)
 # ==============================================================================
-def parse_query_to_constraints(user_query: str, llm: LLMService) -> List[Constraint]:
+def parse_query_to_constraints(user_query: str, llm: LLMService, wiki_service: WikidataService) -> List[Constraint]:
     logger.info("Phase 1: Parsing natural language to constraints...")
 
-    # === 修改点 1: Prompt 明确要求包裹在 "constraints" 键中 ===
+    # === 修改点 1: Prompt 明确要求 LLM 只提取语义标签，不要猜测 ID ===
     prompt = f"""
-        Role: You are a Knowledge Graph Query Parser.
-        Task: Convert the user's question into structured constraints.
+        Role: You are a Semantic Parser for Knowledge Graphs.
+        Task: Extract constraints from the user query and map them to STANDARD Wikidata property labels.
 
         User Query: "{user_query}"
 
-        Requirements:
-        1. Identify atomic constraints.
-        2. Property ID: Predict P-ID if sure (e.g. P57), else empty.
-        3. Value: 
-           - **Entity**: Output the English Name (e.g. "Chester Bennington").
-           - **Quantity/Number**: Output ONLY the number, REMOVE units. (e.g. "109.5 minutes" -> "109.5").
-           - **Date**: Format as YYYY or YYYY-MM-DD.
-        4. Operator: =, >, <, contains.
+        Guidelines:
+        1. **Property Labels**: Do NOT guess P-IDs (e.g., P123). Output the precise English label used in Wikidata.
+           - "born" -> "date of birth"
+           - "won" -> "award received"
+           - "taller than" -> "height" (P2048)
+           - "album by" -> "performer" (P175) or "artist"
+           - "genre" -> "genre" (P136)
 
-        IMPORTANT Output Format:
-        Return a JSON Object with a single key "constraints" containing the list.
-        Example:
+        2. **Values**: 
+           - **Dates**: Convert ALL dates to ISO 8601 format (YYYY-MM-DD). E.g., "2013" -> "2013-01-01" or "2013-12-31" depending on operator.
+           - **Entities**: Keep names as strings (e.g., "Taylor Swift", "Pop Rock").
+           - **Numbers**: Extract pure numbers.
+           - **Unit**: (CRITICAL) Extract the unit if present (e.g., "minutes", "km"). If no unit, return null.
+
+        3. **Operator**: =, >, <, contains.
+
+        Output Format (JSON list wrapped in "constraints"):
         {{
             "constraints": [
-                {{ "id": "c1", "property_id": "Pxx", "property_label": "...", "operator": "=", "value": "...", "softness": 0.0 }}
+                {{ "property_label": "publication date", "operator": ">", "value": "2013-12-31", "unit": null }},
+                {{ "property_label": "performer", "operator": "=", "value": "Taylor Swift", "unit": null }},
+                {{ "property_label": "duration", "operator": "<", "value": "5471", "unit": "minutes" }}
             ]
         }}
     """
-
     try:
         data = llm.generate_json(prompt)
 
@@ -168,7 +149,7 @@ def parse_query_to_constraints(user_query: str, llm: LLMService) -> List[Constra
 
         constraints = []
 
-        # === 修改点 2: 更强的容错解析逻辑 ===
+        # === 修改点 2: 鲁棒的 JSON 解析逻辑 ===
         target_list = []
 
         if isinstance(data, list):
@@ -185,49 +166,68 @@ def parse_query_to_constraints(user_query: str, llm: LLMService) -> List[Constra
                         target_list = val
                         break
 
-        # 开始处理提取到的列表
         for item in target_list:
-            raw_value = str(item.get("value", ""))
-            operator = item.get("operator", "=")
+            # 1. 获取 LLM 提取的语义标签和值
+            raw_label = item.get("property_label", "")
+            final_value = item.get("value", "")
 
-            # ... (保留你原来的数值清洗逻辑: is_quantity 判断等) ...
-            final_value = raw_value
+            # === 修改点 3 [CRITICAL FIX]: 提前定义 is_quantity ===
+            # 逻辑：尝试判断值是否为数值或日期，如果是，则不需要进行实体链接
             is_quantity = False
-            number_match = re.search(r'^(\d+(\.\d+)?)\s*[a-zA-Z]*$', raw_value)
 
-            if operator in [">", "<"] or (number_match and " " in raw_value):
-                if number_match:
-                    final_value = number_match.group(1)
-                    is_quantity = True
+            # 尝试判断是否为纯数字/浮点数
+            try:
+                float(str(final_value))
+                is_quantity = True
+            except ValueError:
+                pass
+
+            # 尝试判断是否为年份或日期 (YYYY 或 YYYY-MM-DD)
+            # 如果是日期，也被视为 Quantity 类数据，不查 QID
+            if not is_quantity and re.match(r'^\d{4}(-\d{2}-\d{2})?$', str(final_value)):
+                is_quantity = True
+
+            # 2. [关键] Relation Linking: 标签 -> P-ID
+            # 我们不再信任 LLM 的 ID，即使它输出了 (通常是错的)
+            # 强制调用 WikiService 进行搜索
+            linked_pid = wiki_service.search_property(raw_label)
+
+            if not linked_pid:
+                logger.warning(
+                    f"  [Linker Failed] Could not map label '{raw_label}' to a Property ID. Dropping this constraint.")
+                continue  # 丢弃无法链接的属性，防止后续查询报错
+
+            logger.info(f"  [Linker] '{raw_label}' -> {linked_pid}")
+
+            # 3. Entity Linking: 值 -> Q-ID
+            # 如果不是数值/日期，且不是 QID，尝试链接实体
+            if not is_quantity and not re.match(r'^Q\d+$', str(final_value)):
+                linked_qid = wiki_service.search_entity(final_value)
+                if linked_qid:
+                    logger.info(f"  [Entity Linker] '{final_value}' -> {linked_qid}")
+                    final_value = linked_qid
                 else:
-                    is_quantity = True
+                    # 如果搜不到实体，可能它本身就是字符串值（如名字），保留原值
+                    logger.info(f"  [Entity Linker] Could not find QID for '{final_value}', keeping as string.")
 
-            # ... (保留你原来的实体链接逻辑: search_wikidata) ...
-            if (not is_quantity
-                    and final_value
-                    and not re.match(r'^Q\d+$', final_value)
-                    and not re.match(r'^[\d\.\-\:]+$', final_value)):
-
-                # 只有还没转成 QID 的才查
-                found_qid = search_wikidata(final_value)
-                if found_qid:
-                    final_value = found_qid
-                    operator = "="
-
+            # 4. 构建约束对象
             c = Constraint(
-                id=item.get("id", "unknown"),
-                property_id=item.get("property_id", ""),
-                property_label=item.get("property_label", "unknown"),
-                operator=operator,
-                value=final_value,
-                softness=float(item.get("softness", 0.0))
+                id=item.get("id", f"c{len(constraints) + 1}"),
+                property_id=linked_pid,  # 使用 Linker 查到的真实 PID
+                property_label=raw_label,
+                operator=item.get("operator", "="),
+                value=final_value,  # 使用 Linker 查到的真实 QID 或清洗后的值
+                softness=0.0,
+
+                # === [新增] 这里一定要加上 unit 字段的提取 ===
+                unit=item.get("unit")
             )
             constraints.append(c)
 
         return constraints
 
     except Exception as e:
-        logger.error(f"Parsing failed details: {e}", exc_info=True)  # 打印详细堆栈
+        logger.error(f"Parsing failed details: {e}", exc_info=True)  # 打印详细堆栈以便调试
         return []
 
 
@@ -272,7 +272,7 @@ def generate_final_report(user_query: str, agent_history: List[str], final_candi
     Final Results:
     {results_str}
 
-    Task: Write a concise and natural answer. Explain HOW the system found the answer based on the history.
+    Task:Based on the above information, please give the answer you think is appropriate. No unnecessary explanations are needed.
     """
 
     report = llm.generate_text(prompt)
@@ -290,29 +290,37 @@ def main():
     print("=== CCSP Framework: Agentic Graph of Thoughts ===\n")
 
     # 1. 配置
-    api_key = os.getenv("LLM_API_KEY", "sk-diwupeelrzsrpfibyrdxlbebzvwrawvhfvlktobvlirjsefm")
-    base_url = os.getenv("LLM_BASE_URL", "https://api.siliconflow.cn/v1/")
-    model_name = "deepseek-ai/DeepSeek-V3.2"  # 确保模型名正确
+    api_key = os.getenv("LLM_API_KEY")
+    base_url = os.getenv("LLM_BASE_URL")
+    model_name = os.getenv("model_name")  # 确保模型名正确
 
     # 2. 基础设施初始化
     try:
         llm_service = LLMService(api_key, base_url, model_name)
         wiki_service = WikidataService()
 
-        # Optimizer 加载元数据 (Critic 的核心)
-        optimizer = ConstraintOptimizer("property_metadata_final.json", llm_service)
+        # [CHANGE] 初始化优化器，传入 wiki_service，不再需要 metadata_path
+        optimizer = ConstraintOptimizer(wiki_service)
+
         logger.info("Infrastructure initialized.")
 
     except Exception as e:
-        logger.error(f"Initialization Failed: {e}")
+        logger.error(f"Init Failed: {e}")
         return
 
     # 3. 用户查询
-    user_query = "Which male poet who was born after 1683 and died before 1826 influenced Charles Dickens?"
+    user_query = "Which comedy film starring Taylor Lautner was released after 2009 and has a runtime of less than 122.5 minutes?"
     print(f"Query: {user_query}\n")
 
     # 4. Phase 1: Parsing (将自然语言转为 Agent 的待办事项)
-    constraints = parse_query_to_constraints(user_query, llm_service)
+    constraints = parse_query_to_constraints(user_query, llm_service, wiki_service)
+
+    print("\n--- Normalizing Units ---")
+    normalizer = UnitNormalizer()
+    constraints = normalizer.normalize(constraints)
+
+    print("\n[System] Probing database for optimal execution path...")
+    constraints = optimizer.optimize(constraints)
 
     if not constraints:
         logger.error("No constraints parsed. Exiting.")
@@ -327,9 +335,8 @@ def main():
 
     # 组装部件
     env = GraphEnvironment(wiki_service)  # 工具箱
-    critic = StatisticalCritic(optimizer)  # 评价器 (注入了 Optimizer)
-    agent = GoTAgent(llm_service, env, critic)  # 大脑
-
+    critic = StatisticalCritic(optimizer)
+    agent = GoTAgent(llm_service, env, critic)
     # Agent 开始自主解题
     final_candidates = agent.solve(user_query, constraints)
 

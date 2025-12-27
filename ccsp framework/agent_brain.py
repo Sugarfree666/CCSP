@@ -20,7 +20,7 @@ class GoTAgent:
     def solve(self, user_query: str, constraints: List[Constraint]):
         # 初始化节点：Root
         self.state.add_node(ThoughtNode("root", "Start", set()))
-
+        constraint_map = {c.id: c for c in constraints}
         step = 0
         while step < self.max_steps:
             # 1. Observe: 获取当前状态
@@ -44,7 +44,7 @@ class GoTAgent:
 
             # 5. Act: 执行工具
             # 注意：这里传入的是由 id 索引的完整约束字典
-            constraint_map = {c.id: c for c in constraints}
+
             result_node = self._execute_action(action_json, constraint_map)
 
             if result_node:
@@ -95,13 +95,14 @@ class GoTAgent:
            - If you have 1-5 candidates left and you have applied all necessary filters, output "FINISH".
         3. **AVOID LOOPS**: Do NOT apply a constraint (FILTER/SEARCH) if it has already been applied in the current path.
         4. **NEXT STEP**: If constraints remain unfulfilled, choose the best one based on the Critic's advice.
+        5.**HANDLE DEAD ENDS**: If a FILTER returns 0 entities, implies missing data or strict constraints. You MUST use 'RELAX_CONSTRAINT' on that constraint.
 
         Available Actions:
         1. SEARCH_ANCHOR(constraint_id): Start a new search path (Only if no good path exists).
         2. FILTER(parent_node_id, constraint_id): Apply a constraint to narrow down results.
         3. INTERSECT(node_id_1, node_id_2): Intersect two sets of candidates.
         4. FINISH(final_node_id): Return the final answer.
-
+        5.RELAX_CONSTRAINT(constraint_id): **CRITICAL**. Use this if a FILTER yielded 0 results. It changes the constraint to 'IGNORE' so you can proceed.
         Output JSON:
         {{
             "reasoning": "Step-by-step reasoning: 1. I see constraints A, B, C are done. 2. Candidate count is X. 3. Therefore I will...",
@@ -126,13 +127,34 @@ class GoTAgent:
                 cid = params["constraint_id"]
                 parent = self.state.get_node(pid)
                 cons = constraint_map[cid]
-
                 if not parent:
                     logger.error(f"Parent node {pid} not found for FILTER.")
                     return None
-
                 candidates = self.tools.tool_filter(parent.candidates, cons)
-                return ThoughtNode(f"node_{pid}_{cid}", f"Filter {cons.property_label}", candidates, parent_ids=[pid])
+                return ThoughtNode(
+                    f"node_{cid}",
+                    f"Filter {cons.property_label}",
+                    candidates,
+                    parent_ids=[pid]
+                )
+
+            elif act_type == "RELAX_CONSTRAINT":
+                cid = params.get("constraint_id")
+                if cid not in constraint_map:
+                    logger.error(f"Constraint {cid} not found.")
+                    return None
+                target_constraint = constraint_map[cid]
+                relaxed_constraint = self.tools.tool_relax_constraint(target_constraint)
+                # 这样下一次 loop 构建 Prompt 时，LLM 会看到这个约束变成了 IGNORE
+                target_constraint.operator = relaxed_constraint.operator
+                target_constraint.value = relaxed_constraint.value
+
+                return ThoughtNode(
+                    f"relax_{cid}",
+                    f"Relaxed {cid} ({target_constraint.property_label}) -> {target_constraint.operator}",
+                    set(),  # 这里不需要候选集，因为下一步通常是重试 Filter
+                    parent_ids=[]
+                )
 
             elif act_type == "INTERSECT":
                 id1 = params["node_id_1"]
